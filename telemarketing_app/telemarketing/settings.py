@@ -36,7 +36,7 @@ class Settings:
     top_n: int = 4
     clarify_max_rounds: int = 2
     brand_name: str = "北文教育"
-    human_handoff: str = "人工顾问将在 30 分钟内回拨，或通过微信继续跟进。"
+    human_handoff: str = "人工顾问会在 30 分钟内回拨，或通过微信继续跟进。"
 
 
 @lru_cache(maxsize=1)
@@ -75,6 +75,6 @@ def get_settings() -> Settings:
         brand_name=get_value("TELEMARKETING_BRAND_NAME", "北文教育"),
         human_handoff=get_value(
             "TELEMARKETING_HUMAN_HANDOFF",
-            "人工顾问将在 30 分钟内回拨，或通过微信继续跟进。",
+            "人工顾问会在 30 分钟内回拨，或通过微信继续跟进。",
         ),
     )

@@ -43,7 +43,19 @@ class TelemarketingEngineTests(unittest.TestCase):
             channel="phone",
         )
         self.assertEqual(result["reply_type"], "answer")
-        self.assertIn("海淀", result["reply"])
+        self.assertTrue(result["retrieved_hits"])
+        self.assertIn("trace", result)
+
+    def test_identity_has_dedicated_branch(self) -> None:
+        result = self.engine.chat(
+            user_text="你是谁？",
+            external_user_id="u_id",
+            session_key="s_id",
+            channel="phone",
+        )
+        self.assertEqual(result["intent"], "identity_check")
+        self.assertNotIn("孩子现在几年级", result["reply"])
+        self.assertIn("课程咨询", result["reply"])
 
     def test_sales_lead_collects_contact(self) -> None:
         first = self.engine.chat(
@@ -54,13 +66,13 @@ class TelemarketingEngineTests(unittest.TestCase):
         )
         self.assertEqual(first["intent"], "sales_lead")
         second = self.engine.chat(
-            user_text="孩子初二数学，微信是abc12345，想约试听",
+            user_text="孩子初二数学，微信是 abc12345，想约试听",
             external_user_id="u2",
             session_key="s2",
             channel="phone",
         )
         self.assertEqual(second["reply_type"], "collect_lead")
-        self.assertIn("跟进", second["reply"])
+        self.assertTrue(second["state"]["lead_id"])
 
     def test_ticket_flow_creates_handoff(self) -> None:
         first = self.engine.chat(

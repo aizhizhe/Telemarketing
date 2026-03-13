@@ -3,47 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Telemarketing Test Console</title>
+  <title>电话销售流程控制台</title>
   <style>
     :root {
-      --bg: #f4efe6;
-      --panel: rgba(255, 252, 247, 0.92);
-      --panel-strong: #fffaf2;
-      --ink: #1f1b17;
-      --muted: #786b5c;
-      --line: rgba(73, 53, 31, 0.14);
-      --accent: #c65d2e;
-      --accent-deep: #9c4520;
-      --user: #243b53;
-      --assistant: #f2e6d7;
-      --shadow: 0 20px 60px rgba(72, 45, 24, 0.12);
+      --bg: #f2eadc;
+      --panel: rgba(255, 251, 245, 0.92);
+      --panel-strong: #fffdf8;
+      --ink: #231c16;
+      --muted: #6f6357;
+      --line: rgba(80, 61, 40, 0.14);
+      --accent: #b6542b;
+      --accent-deep: #8e3f1e;
+      --accent-soft: rgba(182, 84, 43, 0.1);
+      --user: #27445d;
+      --assistant: #f6e6d3;
+      --chip: #efe4d4;
+      --shadow: 0 18px 60px rgba(78, 55, 31, 0.12);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at top left, rgba(198, 93, 46, 0.16), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(36, 59, 83, 0.12), transparent 32%),
-        linear-gradient(135deg, #efe7db 0%, #f7f3ec 48%, #efe2d3 100%);
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(182, 84, 43, 0.14), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(39, 68, 93, 0.12), transparent 28%),
+        linear-gradient(135deg, #efe5d4 0%, #f8f3eb 52%, #ece0cf 100%);
     }
 
-    .app {
-      width: min(1100px, 100%);
-      min-height: 82vh;
+    .layout {
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: 22px;
       display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 20px;
+      grid-template-columns: 300px minmax(420px, 1fr) 420px;
+      gap: 18px;
     }
 
     .card {
@@ -51,11 +48,12 @@
       border: 1px solid var(--line);
       border-radius: 24px;
       box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
     }
 
-    .sidebar {
-      padding: 24px;
+    .sidebar,
+    .trace-shell {
+      padding: 22px;
       display: flex;
       flex-direction: column;
       gap: 18px;
@@ -63,16 +61,15 @@
 
     .title {
       margin: 0;
-      font-size: 28px;
-      line-height: 1.1;
-      letter-spacing: 0.02em;
+      font-size: 30px;
+      line-height: 1.05;
     }
 
     .subtitle {
       margin: 0;
       color: var(--muted);
-      line-height: 1.6;
       font-size: 14px;
+      line-height: 1.7;
     }
 
     .field {
@@ -82,16 +79,16 @@
     }
 
     .field label {
-      font-size: 13px;
       color: var(--muted);
+      font-size: 13px;
     }
 
     .field input,
-    .composer textarea {
+    textarea {
       width: 100%;
       border: 1px solid var(--line);
-      background: var(--panel-strong);
       border-radius: 16px;
+      background: var(--panel-strong);
       padding: 12px 14px;
       font: inherit;
       color: var(--ink);
@@ -100,21 +97,24 @@
     }
 
     .field input:focus,
-    .composer textarea:focus {
-      border-color: rgba(198, 93, 46, 0.55);
+    textarea:focus {
+      border-color: rgba(182, 84, 43, 0.45);
       transform: translateY(-1px);
     }
 
-    .tips {
-      border-top: 1px solid var(--line);
-      padding-top: 14px;
-      color: var(--muted);
-      font-size: 13px;
+    .tips,
+    .legend {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: var(--accent-soft);
       line-height: 1.7;
+      font-size: 13px;
     }
 
+    .legend strong,
     .tips strong {
-      color: var(--ink);
+      display: block;
+      margin-bottom: 6px;
     }
 
     .chat-shell {
@@ -124,71 +124,73 @@
     }
 
     .chat-header {
-      padding: 22px 24px 18px;
+      padding: 22px 24px 16px;
       border-bottom: 1px solid var(--line);
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 14px;
+      align-items: flex-start;
     }
 
-    .chat-header h2 {
-      margin: 0;
-      font-size: 18px;
+    .chat-header h2,
+    .trace-shell h2 {
+      margin: 0 0 6px;
+      font-size: 19px;
     }
 
     .status {
-      font-size: 12px;
-      color: var(--muted);
+      white-space: nowrap;
       padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(36, 59, 83, 0.08);
-      border: 1px solid rgba(36, 59, 83, 0.08);
+      border: 1px solid rgba(39, 68, 93, 0.12);
+      background: rgba(39, 68, 93, 0.08);
+      color: var(--muted);
+      font-size: 12px;
     }
 
     .messages {
-      padding: 24px;
+      padding: 22px 24px;
       overflow: auto;
       display: flex;
       flex-direction: column;
       gap: 14px;
       background:
-        linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.15)),
+        linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0.14)),
         repeating-linear-gradient(
           180deg,
           transparent 0,
           transparent 30px,
-          rgba(120, 107, 92, 0.04) 31px
+          rgba(111, 99, 87, 0.04) 31px
         );
     }
 
     .bubble {
-      max-width: min(78%, 760px);
+      max-width: 86%;
       padding: 14px 16px;
       border-radius: 18px;
       line-height: 1.7;
       white-space: pre-wrap;
-      animation: rise 0.24s ease;
+      animation: rise 0.22s ease;
     }
 
     .bubble.user {
       align-self: flex-end;
       color: #fff;
-      background: linear-gradient(135deg, var(--user), #162635);
-      border-bottom-right-radius: 6px;
+      background: linear-gradient(135deg, var(--user), #183247);
+      border-bottom-right-radius: 7px;
     }
 
     .bubble.assistant {
       align-self: flex-start;
       background: var(--assistant);
-      border: 1px solid rgba(198, 93, 46, 0.14);
-      border-bottom-left-radius: 6px;
+      border: 1px solid rgba(182, 84, 43, 0.14);
+      border-bottom-left-radius: 7px;
     }
 
     .meta {
       margin-top: 8px;
-      font-size: 11px;
       color: var(--muted);
+      font-size: 11px;
     }
 
     .composer {
@@ -197,14 +199,14 @@
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 14px;
+      background: rgba(255, 252, 246, 0.75);
       align-items: end;
-      background: rgba(255, 250, 242, 0.78);
     }
 
-    .composer textarea {
-      min-height: 96px;
-      max-height: 220px;
+    textarea {
+      min-height: 110px;
       resize: vertical;
+      max-height: 240px;
     }
 
     .actions {
@@ -219,48 +221,119 @@
       padding: 12px 16px;
       font: inherit;
       cursor: pointer;
-      transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+      transition: transform 0.18s ease, opacity 0.18s ease;
     }
 
-    button:hover {
-      transform: translateY(-1px);
-    }
-
-    button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-      transform: none;
-    }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.56; cursor: not-allowed; transform: none; }
 
     .primary {
+      min-width: 136px;
       background: linear-gradient(135deg, var(--accent), var(--accent-deep));
       color: #fff;
-      min-width: 132px;
     }
 
     .ghost {
-      background: rgba(36, 59, 83, 0.08);
+      background: rgba(39, 68, 93, 0.08);
       color: var(--ink);
     }
 
+    .trace-grid {
+      display: grid;
+      gap: 14px;
+      overflow: auto;
+    }
+
+    .summary-box,
+    .panel {
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .summary-box p,
+    .panel p {
+      margin: 0;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .workflow-step {
+      padding: 14px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(239, 228, 212, 0.6));
+      border: 1px solid var(--line);
+    }
+
+    .workflow-step h3,
+    .panel h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .micro {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .code-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .code-item {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(239, 228, 212, 0.5);
+      border: 1px solid var(--line);
+    }
+
+    .mono {
+      display: block;
+      margin-top: 6px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
     @keyframes rise {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1240px) {
+      .layout {
+        grid-template-columns: 280px 1fr;
       }
-      to {
-        opacity: 1;
-        transform: translateY(0);
+
+      .trace-shell {
+        grid-column: 1 / -1;
       }
     }
 
-    @media (max-width: 900px) {
-      .app {
+    @media (max-width: 880px) {
+      .layout {
         grid-template-columns: 1fr;
-      }
-
-      .chat-shell {
-        min-height: 72vh;
       }
 
       .composer {
@@ -272,17 +345,17 @@
       }
 
       .bubble {
-        max-width: 92%;
+        max-width: 94%;
       }
     }
   </style>
 </head>
 <body>
-  <div class="app">
+  <div class="layout">
     <aside class="card sidebar">
       <div>
-        <h1 class="title">人工对话测试台</h1>
-        <p class="subtitle">你现在可以把自己当成真实客户，和“销售顾问”连续对话，测试问答、留资、投诉建单和转人工。</p>
+        <h1 class="title">电话销售流程台</h1>
+        <p class="subtitle">左侧填测试身份，中间模拟客户和销售多轮对话，右侧实时展开“抽取、路由、检索、话术、业务动作”每一层都做了什么。</p>
       </div>
 
       <div class="field">
@@ -306,19 +379,24 @@
       </div>
 
       <div class="tips">
-        <strong>建议测试语句</strong><br>
-        1. 你们在哪啊？<br>
-        2. 我想了解一下报价<br>
-        3. 孩子初二数学，微信是 abc12345<br>
-        4. 我要投诉，老师老是迟到
+        <strong>建议先测这几句</strong>
+        你是谁？<br>
+        你们价格怎么报？<br>
+        孩子初二数学，微信 abc12345<br>
+        我想投诉，老师老迟到
+      </div>
+
+      <div class="legend">
+        <strong>右侧会看到什么</strong>
+        本轮摘要、每层决策、命中的知识库文件、涉及的代码入口，以及本轮真正用到的文件清单。
       </div>
     </aside>
 
     <main class="card chat-shell">
       <div class="chat-header">
         <div>
-          <h2>Sales Chat Sandbox</h2>
-          <div class="subtitle">前端页面调用本地 `/chat` 接口，保留同一会话状态。</div>
+          <h2>人工对话测试</h2>
+          <p class="subtitle">这个页面调用本地 <code>/chat</code> 和 <code>/system-map</code>，保留同一会话状态，方便连续观察行为变化。</p>
         </div>
         <div id="status" class="status">准备就绪</div>
       </div>
@@ -326,13 +404,21 @@
       <section id="messages" class="messages"></section>
 
       <form id="chatForm" class="composer">
-        <textarea id="message" placeholder="请输入你要对销售说的话，比如：你们在哪啊？"></textarea>
+        <textarea id="message" placeholder="请输入你要对销售说的话，例如：你是谁？"></textarea>
         <div class="actions">
           <button type="submit" class="primary" id="sendBtn">发送消息</button>
           <button type="button" class="ghost" id="resetBtn">重置会话</button>
         </div>
       </form>
     </main>
+
+    <aside class="card trace-shell">
+      <div>
+        <h2>流程透视</h2>
+        <p class="subtitle">这块不只是展示结果，而是把系统是怎么得出这句回复的展开给你看。</p>
+      </div>
+      <div id="traceRoot" class="trace-grid"></div>
+    </aside>
   </div>
 
   <script>
@@ -346,38 +432,53 @@
     const sendBtn = document.getElementById("sendBtn");
     const resetBtn = document.getElementById("resetBtn");
     const form = document.getElementById("chatForm");
+    const traceRoot = document.getElementById("traceRoot");
+
+    let systemMap = null;
 
     function randomId(prefix) {
       return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
     }
 
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
     function loadState() {
-      const saved = JSON.parse(localStorage.getItem("telemarketing-web-state") || "{}");
-      nicknameInput.value = saved.nickname || "张女士";
+      const saved = JSON.parse(localStorage.getItem("telemarketing-workflow-state") || "{}");
+      nicknameInput.value = saved.nickname || "网页测试用户";
       channelInput.value = saved.channel || "phone";
       userIdInput.value = saved.userId || randomId("web-user");
       sessionKeyInput.value = saved.sessionKey || randomId("web-session");
+
       const history = saved.history || [];
       if (!history.length) {
-        addBubble("assistant", "您好，这里是电话销售测试台。您可以直接像真实客户一样发消息，我会按当前会话连续回复。");
+        addBubble("assistant", "您好，这里是电话销售测试台。您现在可以像真实客户一样连续提问，我会把每轮回复的内部流程也同步展开。", "", false);
       } else {
         history.forEach((item) => addBubble(item.role, item.text, item.meta, false));
       }
+      renderTrace(saved.trace || null);
       scrollToBottom();
     }
 
-    function saveState() {
+    function saveState(trace = null) {
       const history = Array.from(messagesEl.querySelectorAll(".bubble")).map((node) => ({
         role: node.dataset.role,
         text: node.querySelector(".content").textContent,
         meta: node.querySelector(".meta")?.textContent || ""
       }));
-      localStorage.setItem("telemarketing-web-state", JSON.stringify({
+      localStorage.setItem("telemarketing-workflow-state", JSON.stringify({
         nickname: nicknameInput.value.trim(),
         channel: channelInput.value.trim(),
         userId: userIdInput.value.trim(),
         sessionKey: sessionKeyInput.value.trim(),
-        history
+        history,
+        trace: trace || null
       }));
     }
 
@@ -404,13 +505,83 @@
 
       messagesEl.appendChild(bubble);
       scrollToBottom();
-      if (persist) {
-        saveState();
-      }
+      if (persist) saveState();
     }
 
     function scrollToBottom() {
       messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function panel(title, content) {
+      return `<section class="panel"><h3>${escapeHtml(title)}</h3>${content}</section>`;
+    }
+
+    function renderTrace(trace) {
+      const layers = (systemMap && systemMap.layers) || [];
+      if (!trace) {
+        traceRoot.innerHTML =
+          panel("系统结构", `<p>页面已加载。发送一轮消息后，这里会显示本轮摘要、命中的知识库、涉及的代码入口和文件清单。</p>`) +
+          panel("系统层", layers.map((layer) => `
+            <div class="code-item">
+              <strong>${escapeHtml(layer.layer)}</strong>
+              <div class="micro">${escapeHtml(layer.goal)}</div>
+              <span class="mono">${escapeHtml(layer.file_path)}</span>
+            </div>
+          `).join(""));
+        return;
+      }
+
+      const workflowHtml = (trace.workflow || []).map((step) => `
+        <div class="workflow-step">
+          <h3>${escapeHtml(step.layer)}</h3>
+          <p>${escapeHtml(step.action)}</p>
+          <div class="micro">${escapeHtml(step.detail)}</div>
+          <span class="mono">${escapeHtml(step.file_path || "")}</span>
+          <div class="micro">${escapeHtml(step.code || "")}</div>
+        </div>
+      `).join("");
+
+      const knowledgeHtml = (trace.knowledge_refs || []).length
+        ? (trace.knowledge_refs || []).map((item) => `
+            <div class="code-item">
+              <strong>${escapeHtml(item.title)}</strong>
+              <div class="micro">类型：${escapeHtml(item.kb_type)} | 场景：${escapeHtml(item.scene || "未标注")} | 分数：${escapeHtml(String(item.score))}</div>
+              <div class="micro">匹配：${escapeHtml(item.matched_variant || "直接命中")}</div>
+              <span class="mono">${escapeHtml(item.path)}</span>
+            </div>
+          `).join("")
+        : `<p>本轮没有命中知识库，主要走的是策略或兜底分支。</p>`;
+
+      const codeHtml = (trace.code_refs || []).map((item) => `
+        <div class="code-item">
+          <strong>${escapeHtml(item.layer)}</strong>
+          <div class="micro">${escapeHtml(item.code)}</div>
+          <span class="mono">${escapeHtml(item.file_path)}</span>
+        </div>
+      `).join("");
+
+      const fileHtml = (trace.files_used || []).length
+        ? `<div class="chips">${trace.files_used.map((file) => `<span class="chip">${escapeHtml(file)}</span>`).join("")}</div>`
+        : `<p>本轮暂无文件引用。</p>`;
+
+      traceRoot.innerHTML = `
+        <section class="summary-box">
+          <h3>本轮摘要</h3>
+          <p>${escapeHtml(trace.summary || "暂无摘要")}</p>
+          <div class="micro" style="margin-top:8px;">用户输入：${escapeHtml(trace.user_text || "")}</div>
+        </section>
+        ${panel("流程步骤", workflowHtml || "<p>暂无流程步骤。</p>")}
+        ${panel("命中的知识库", knowledgeHtml)}
+        ${panel("代码入口", `<div class="code-list">${codeHtml}</div>`)}
+        ${panel("本轮用到的文件", fileHtml)}
+      `;
+    }
+
+    async function fetchSystemMap() {
+      const response = await fetch("/system-map");
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      systemMap = await response.json();
+      renderTrace(JSON.parse(localStorage.getItem("telemarketing-workflow-state") || "{}").trace || null);
     }
 
     async function sendMessage(event) {
@@ -422,32 +593,32 @@
         external_user_id: userIdInput.value.trim(),
         session_key: sessionKeyInput.value.trim(),
         channel: channelInput.value.trim() || "phone",
-        nickname: nicknameInput.value.trim() || "网页用户",
+        nickname: nicknameInput.value.trim() || "网页测试用户",
         message
       };
 
       addBubble("user", message);
       messageInput.value = "";
       sendBtn.disabled = true;
-      setStatus("销售顾问输入中...");
+      setStatus("系统正在分析...");
 
       try {
         const response = await fetch("/chat", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
         const data = await response.json();
         const meta = `intent=${data.intent} | reply_type=${data.reply_type} | next_action=${data.next_action}`;
-        addBubble("assistant", data.reply, meta);
+        addBubble("assistant", data.reply, meta, false);
+        renderTrace(data.trace || null);
+        saveState(data.trace || null);
         setStatus("准备就绪");
       } catch (error) {
-        addBubble("assistant", `请求失败：${error.message}`, "network_error");
+        addBubble("assistant", `请求失败：${error.message}`, "network_error", false);
+        saveState();
         setStatus("请求失败");
       } finally {
         sendBtn.disabled = false;
@@ -455,13 +626,14 @@
     }
 
     function resetSession() {
-      localStorage.removeItem("telemarketing-web-state");
+      localStorage.removeItem("telemarketing-workflow-state");
       messagesEl.innerHTML = "";
       userIdInput.value = randomId("web-user");
       sessionKeyInput.value = randomId("web-session");
-      nicknameInput.value = "张女士";
+      nicknameInput.value = "网页测试用户";
       channelInput.value = "phone";
-      addBubble("assistant", "会话已重置。你可以重新从第一句开始测试。");
+      addBubble("assistant", "会话已重置。你可以重新从第一句开始测试，例如先问“你是谁？”。", "", false);
+      renderTrace(null);
       saveState();
       setStatus("会话已重置");
     }
@@ -469,10 +641,14 @@
     form.addEventListener("submit", sendMessage);
     resetBtn.addEventListener("click", resetSession);
     [nicknameInput, channelInput, userIdInput, sessionKeyInput].forEach((input) => {
-      input.addEventListener("change", saveState);
+      input.addEventListener("change", () => saveState(JSON.parse(localStorage.getItem("telemarketing-workflow-state") || "{}").trace || null));
     });
 
     loadState();
+    fetchSystemMap().catch((error) => {
+      setStatus("系统图加载失败");
+      traceRoot.innerHTML = panel("系统图加载失败", `<p>${escapeHtml(error.message)}</p>`);
+    });
     saveState();
   </script>
 </body>

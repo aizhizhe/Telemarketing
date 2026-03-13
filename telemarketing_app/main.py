@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from telemarketing import TelemarketingEngine
 
 
-app = FastAPI(title="Telemarketing MVP", version="1.0.0")
+app = FastAPI(title="Telemarketing Workflow Console", version="1.1.0")
 engine = TelemarketingEngine()
 WEB_ROOT = Path(__file__).resolve().parent / "web"
 
@@ -33,6 +33,11 @@ def health() -> dict:
         "knowledge_dir": str(engine.settings.knowledge_base_dir),
         "database_path": str(engine.settings.database_path),
     }
+
+
+@app.get("/system-map")
+def system_map() -> dict:
+    return engine.describe_system()
 
 
 @app.post("/chat")
