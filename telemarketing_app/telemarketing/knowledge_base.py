@@ -92,6 +92,7 @@ PAIN_GRADE_CANDIDATES = {
 }
 GRADE_PATTERNS = (
     (re.compile(r"(小学[1-6一二三四五六]年级)"), None),
+    (re.compile(r"([一二三四五六]年级)"), None),
     (re.compile(r"(初[一二三])"), None),
     (re.compile(r"([七八九]年级)"), None),
     (re.compile(r"(高[一二三])"), None),

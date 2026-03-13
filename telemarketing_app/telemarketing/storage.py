@@ -237,20 +237,16 @@ class TelemarketingStorage:
                 return ConversationState(conversation_id=cursor.lastrowid, user_id=user_id)
 
             state_payload = json.loads(row["state_json"] or "{}")
-            return ConversationState(
-                conversation_id=row["id"],
-                user_id=row["user_id"],
-                current_intent=state_payload.get("current_intent", row["current_intent"]),
-                clarify_round=state_payload.get("clarify_round", row["clarify_round"]),
-                risk_flag=state_payload.get("risk_flag", row["risk_flag"]),
-                handoff_status=state_payload.get("handoff_status", row["handoff_status"]),
-                sales_stage=state_payload.get("sales_stage", "opening"),
-                known_slots=json.loads(row["known_slots_json"] or "{}"),
-                lead_id=state_payload.get("lead_id"),
-                ticket_id=state_payload.get("ticket_id"),
-                summary_text=row["summary_text"] or "",
-                last_reply_type=state_payload.get("last_reply_type", "answer"),
-            )
+            state = ConversationState.from_dict(state_payload)
+            state.conversation_id = row["id"]
+            state.user_id = row["user_id"]
+            state.current_intent = state.current_intent or row["current_intent"]
+            state.clarify_round = state.clarify_round or row["clarify_round"]
+            state.risk_flag = state.risk_flag or row["risk_flag"]
+            state.handoff_status = state.handoff_status or row["handoff_status"]
+            state.summary_text = row["summary_text"] or state.summary_text
+            state.known_slots = json.loads(row["known_slots_json"] or "{}") or state.known_slots
+            return state
 
     def save_state(self, state: ConversationState) -> None:
         if state.conversation_id is None:
@@ -341,7 +337,7 @@ class TelemarketingStorage:
             return int(cursor.lastrowid)
 
     def create_ticket(self, state: ConversationState, category: str = "complaint") -> tuple[int, str]:
-        ticket_no = f"TK{datetime.now(UTC):%Y%m%d%H%M%S}"
+        ticket_no = f"TK{datetime.now(UTC):%Y%m%d%H%M%S%f}"
         with self._session() as conn:
             cursor = conn.execute(
                 """

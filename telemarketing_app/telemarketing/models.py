@@ -54,6 +54,13 @@ class ConversationState:
     ticket_id: int | None = None
     summary_text: str = ""
     last_reply_type: str = "answer"
+    turn_index: int = 0
+    user_history: list[str] = field(default_factory=list)
+    reply_history: list[str] = field(default_factory=list)
+    asked_fields: list[str] = field(default_factory=list)
+    last_topic: str = ""
+    contact_refused: bool = False
+    conversation_outcome: str = ""
 
     def merge_slots(self, updates: dict[str, str]) -> None:
         for key, value in updates.items():
@@ -72,6 +79,16 @@ class ConversationState:
     def has_contact(self) -> bool:
         return bool(self.known_slots.get("contact_phone") or self.known_slots.get("contact_wechat"))
 
+    @classmethod
+    def from_dict(cls, payload: dict | None) -> "ConversationState":
+        state = cls()
+        if not payload:
+            return state
+        for key, value in payload.items():
+            if hasattr(state, key):
+                setattr(state, key, value)
+        return state
+
     def to_dict(self) -> dict:
         return {
             "conversation_id": self.conversation_id,
@@ -86,4 +103,11 @@ class ConversationState:
             "ticket_id": self.ticket_id,
             "summary_text": self.summary_text,
             "last_reply_type": self.last_reply_type,
+            "turn_index": self.turn_index,
+            "user_history": list(self.user_history),
+            "reply_history": list(self.reply_history),
+            "asked_fields": list(self.asked_fields),
+            "last_topic": self.last_topic,
+            "contact_refused": self.contact_refused,
+            "conversation_outcome": self.conversation_outcome,
         }
