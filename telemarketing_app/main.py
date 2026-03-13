@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from telemarketing import TelemarketingEngine
@@ -6,6 +9,7 @@ from telemarketing import TelemarketingEngine
 
 app = FastAPI(title="Telemarketing MVP", version="1.0.0")
 engine = TelemarketingEngine()
+WEB_ROOT = Path(__file__).resolve().parent / "web"
 
 
 class ChatRequest(BaseModel):
@@ -14,6 +18,11 @@ class ChatRequest(BaseModel):
     channel: str = Field(default="phone")
     nickname: str | None = None
     message: str
+
+
+@app.get("/")
+def index() -> FileResponse:
+    return FileResponse(WEB_ROOT / "index.html")
 
 
 @app.get("/health")

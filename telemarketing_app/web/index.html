@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telemarketing Test Console</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --panel: rgba(255, 252, 247, 0.92);
+      --panel-strong: #fffaf2;
+      --ink: #1f1b17;
+      --muted: #786b5c;
+      --line: rgba(73, 53, 31, 0.14);
+      --accent: #c65d2e;
+      --accent-deep: #9c4520;
+      --user: #243b53;
+      --assistant: #f2e6d7;
+      --shadow: 0 20px 60px rgba(72, 45, 24, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(198, 93, 46, 0.16), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(36, 59, 83, 0.12), transparent 32%),
+        linear-gradient(135deg, #efe7db 0%, #f7f3ec 48%, #efe2d3 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(1100px, 100%);
+      min-height: 82vh;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.1;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .field input,
+    .composer textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+      border-radius: 16px;
+      padding: 12px 14px;
+      font: inherit;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .field input:focus,
+    .composer textarea:focus {
+      border-color: rgba(198, 93, 46, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .tips {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .tips strong {
+      color: var(--ink);
+    }
+
+    .chat-shell {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .chat-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .status {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(36, 59, 83, 0.08);
+      border: 1px solid rgba(36, 59, 83, 0.08);
+    }
+
+    .messages {
+      padding: 24px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.15)),
+        repeating-linear-gradient(
+          180deg,
+          transparent 0,
+          transparent 30px,
+          rgba(120, 107, 92, 0.04) 31px
+        );
+    }
+
+    .bubble {
+      max-width: min(78%, 760px);
+      padding: 14px 16px;
+      border-radius: 18px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      animation: rise 0.24s ease;
+    }
+
+    .bubble.user {
+      align-self: flex-end;
+      color: #fff;
+      background: linear-gradient(135deg, var(--user), #162635);
+      border-bottom-right-radius: 6px;
+    }
+
+    .bubble.assistant {
+      align-self: flex-start;
+      background: var(--assistant);
+      border: 1px solid rgba(198, 93, 46, 0.14);
+      border-bottom-left-radius: 6px;
+    }
+
+    .meta {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .composer {
+      padding: 18px 24px 24px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: end;
+      background: rgba(255, 250, 242, 0.78);
+    }
+
+    .composer textarea {
+      min-height: 96px;
+      max-height: 220px;
+      resize: vertical;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 16px;
+      padding: 12px 16px;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      color: #fff;
+      min-width: 132px;
+    }
+
+    .ghost {
+      background: rgba(36, 59, 83, 0.08);
+      color: var(--ink);
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .chat-shell {
+        min-height: 72vh;
+      }
+
+      .composer {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        flex-direction: row;
+      }
+
+      .bubble {
+        max-width: 92%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="card sidebar">
+      <div>
+        <h1 class="title">人工对话测试台</h1>
+        <p class="subtitle">你现在可以把自己当成真实客户，和“销售顾问”连续对话，测试问答、留资、投诉建单和转人工。</p>
+      </div>
+
+      <div class="field">
+        <label for="nickname">用户昵称</label>
+        <input id="nickname" placeholder="例如：张女士">
+      </div>
+
+      <div class="field">
+        <label for="channel">渠道</label>
+        <input id="channel" value="phone">
+      </div>
+
+      <div class="field">
+        <label for="userId">用户 ID</label>
+        <input id="userId">
+      </div>
+
+      <div class="field">
+        <label for="sessionKey">会话 ID</label>
+        <input id="sessionKey">
+      </div>
+
+      <div class="tips">
+        <strong>建议测试语句</strong><br>
+        1. 你们在哪啊？<br>
+        2. 我想了解一下报价<br>
+        3. 孩子初二数学，微信是 abc12345<br>
+        4. 我要投诉，老师老是迟到
+      </div>
+    </aside>
+
+    <main class="card chat-shell">
+      <div class="chat-header">
+        <div>
+          <h2>Sales Chat Sandbox</h2>
+          <div class="subtitle">前端页面调用本地 `/chat` 接口，保留同一会话状态。</div>
+        </div>
+        <div id="status" class="status">准备就绪</div>
+      </div>
+
+      <section id="messages" class="messages"></section>
+
+      <form id="chatForm" class="composer">
+        <textarea id="message" placeholder="请输入你要对销售说的话，比如：你们在哪啊？"></textarea>
+        <div class="actions">
+          <button type="submit" class="primary" id="sendBtn">发送消息</button>
+          <button type="button" class="ghost" id="resetBtn">重置会话</button>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <script>
+    const nicknameInput = document.getElementById("nickname");
+    const channelInput = document.getElementById("channel");
+    const userIdInput = document.getElementById("userId");
+    const sessionKeyInput = document.getElementById("sessionKey");
+    const messageInput = document.getElementById("message");
+    const messagesEl = document.getElementById("messages");
+    const statusEl = document.getElementById("status");
+    const sendBtn = document.getElementById("sendBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const form = document.getElementById("chatForm");
+
+    function randomId(prefix) {
+      return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    function loadState() {
+      const saved = JSON.parse(localStorage.getItem("telemarketing-web-state") || "{}");
+      nicknameInput.value = saved.nickname || "张女士";
+      channelInput.value = saved.channel || "phone";
+      userIdInput.value = saved.userId || randomId("web-user");
+      sessionKeyInput.value = saved.sessionKey || randomId("web-session");
+      const history = saved.history || [];
+      if (!history.length) {
+        addBubble("assistant", "您好，这里是电话销售测试台。您可以直接像真实客户一样发消息，我会按当前会话连续回复。");
+      } else {
+        history.forEach((item) => addBubble(item.role, item.text, item.meta, false));
+      }
+      scrollToBottom();
+    }
+
+    function saveState() {
+      const history = Array.from(messagesEl.querySelectorAll(".bubble")).map((node) => ({
+        role: node.dataset.role,
+        text: node.querySelector(".content").textContent,
+        meta: node.querySelector(".meta")?.textContent || ""
+      }));
+      localStorage.setItem("telemarketing-web-state", JSON.stringify({
+        nickname: nicknameInput.value.trim(),
+        channel: channelInput.value.trim(),
+        userId: userIdInput.value.trim(),
+        sessionKey: sessionKeyInput.value.trim(),
+        history
+      }));
+    }
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function addBubble(role, text, meta = "", persist = true) {
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${role}`;
+      bubble.dataset.role = role;
+
+      const content = document.createElement("div");
+      content.className = "content";
+      content.textContent = text;
+      bubble.appendChild(content);
+
+      if (meta) {
+        const metaNode = document.createElement("div");
+        metaNode.className = "meta";
+        metaNode.textContent = meta;
+        bubble.appendChild(metaNode);
+      }
+
+      messagesEl.appendChild(bubble);
+      scrollToBottom();
+      if (persist) {
+        saveState();
+      }
+    }
+
+    function scrollToBottom() {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function sendMessage(event) {
+      event.preventDefault();
+      const message = messageInput.value.trim();
+      if (!message) return;
+
+      const payload = {
+        external_user_id: userIdInput.value.trim(),
+        session_key: sessionKeyInput.value.trim(),
+        channel: channelInput.value.trim() || "phone",
+        nickname: nicknameInput.value.trim() || "网页用户",
+        message
+      };
+
+      addBubble("user", message);
+      messageInput.value = "";
+      sendBtn.disabled = true;
+      setStatus("销售顾问输入中...");
+
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        const meta = `intent=${data.intent} | reply_type=${data.reply_type} | next_action=${data.next_action}`;
+        addBubble("assistant", data.reply, meta);
+        setStatus("准备就绪");
+      } catch (error) {
+        addBubble("assistant", `请求失败：${error.message}`, "network_error");
+        setStatus("请求失败");
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    function resetSession() {
+      localStorage.removeItem("telemarketing-web-state");
+      messagesEl.innerHTML = "";
+      userIdInput.value = randomId("web-user");
+      sessionKeyInput.value = randomId("web-session");
+      nicknameInput.value = "张女士";
+      channelInput.value = "phone";
+      addBubble("assistant", "会话已重置。你可以重新从第一句开始测试。");
+      saveState();
+      setStatus("会话已重置");
+    }
+
+    form.addEventListener("submit", sendMessage);
+    resetBtn.addEventListener("click", resetSession);
+    [nicknameInput, channelInput, userIdInput, sessionKeyInput].forEach((input) => {
+      input.addEventListener("change", saveState);
+    });
+
+    loadState();
+    saveState();
+  </script>
+</body>
+</html>
