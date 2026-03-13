@@ -1,0 +1,362 @@
+## 2026-03-13 23:08 ?????????
+
+```text
+模型：GPT-5 推理级别：高 耗时：41秒
+
+结论：第一期建议按“单智能体问答 + 知识检索 + 留资/工单 + 人工接管”的 MVP 架构落地，先把链路跑通，不上复杂多 Agent 编排。这样交付最快、风险最低，也最适合先验证转化和服务闭环。
+
+这次我已经把一期需要的 4 项核心设计物整理出来了：系统架构图、对话流程图、提示词模板、数据表结构。关键判断有 3 个：一是澄清轮次最多 2 轮，避免把用户问跑；二是回复类型先收敛成 `answer / clarify / collect_lead / handoff / refuse`；三是数据层一期只保留支撑问答、留资、工单、知识检索的最小闭环。
+
+**1. 系统架构图**
+
+```mermaid
+flowchart LR
+    U[用户\nWeb/H5/企微/公众号/小程序] --> G[接入网关 API]
+    G --> S[会话服务]
+    S --> O[编排层 Orchestrator]
+
+    O --> I[意图识别]
+    O --> R[知识检索 RAG]
+    O --> P[提示词组装]
+    O --> M[大模型推理]
+    O --> A[动作决策\n留资/建单/转人工]
+
+    R --> KB[(知识库)]
+    R --> V[(向量索引)]
+
+    A --> CRM[(线索表 Leads)]
+    A --> TK[(工单表 Tickets)]
+    A --> HF[人工客服/销售]
+
+    S --> DB[(业务库 MySQL/Postgres)]
+    O --> LOG[(日志与事件)]
+    M --> CACHE[(缓存/会话摘要 Redis)]
+```
+
+模块说明：
+- `接入网关`：统一接收用户消息、渠道身份、设备信息。
+- `会话服务`：维护会话状态、历史摘要、澄清轮次、用户标签。
+- `编排层`：决定当前走问答、澄清、留资、投诉还是拒答。
+- `知识检索`：基于 FAQ/文档做召回，给模型提供可回答依据。
+- `动作决策`：命中销售意图就留资，命中售后就建工单，超边界则转人工。
+- `业务库`：保存用户、会话、消息、线索、工单、知识文档。
+- `缓存/摘要`：减少上下文长度，降低模型成本。
+- `日志与事件`：记录命中意图、检索结果、模型输出、人工接管等。
+
+**2. 对话流程图**
+
+```mermaid
+flowchart TD
+    A[用户发起消息] --> B[加载用户画像/历史摘要/渠道信息]
+    B --> C{安全与边界检查}
+    C -->|命中风险| C1[拒答并提供人工渠道]
+    C -->|通过| D{意图识别}
+
+    D -->|标准咨询| F[知识检索]
+    D -->|信息不足| G[追问一个关键问题]
+    D -->|报价/合作/试用| H[留资收集]
+    D -->|投诉/售后| I[收集证据并建单]
+    D -->|闲聊| E[轻量回应并引导]
+    D -->|超范围| J[说明边界并给替代路径]
+
+    F --> F1{检索置信度是否足够}
+    F1 -->|是| K[生成答案]
+    F1 -->|否| G
+
+    G --> G1{澄清轮次 < 2}
+    G1 -->|是| G2[只问一个最关键问题]
+    G2 --> D
+    G1 -->|否| L[建议留资或转人工]
+
+    H --> H1[补齐姓名/公司/联系方式/需求]
+    H1 --> M[写入线索并确认时效]
+
+    I --> I1[安抚并复述问题]
+    I1 --> I2[收集订单号/时间/截图/联系方式]
+    I2 --> N[创建售后工单]
+
+    K --> O[给下一步建议]
+    E --> O
+    J --> O
+    L --> O
+    C1 --> O
+    M --> P[结束或等待下一问]
+    N --> P
+    O --> P
+```
+
+一期流程规则：
+- 问答优先直接回答，信息不足再追问。
+- 澄清一次只问 1 个问题，最多 2 轮。
+- 明确销售意向就进入留资，不要继续泛聊。
+- 投诉先安抚，再取证，再建单。
+- 超范围和高风险内容不硬答，给替代路径或人工入口。
+
+**3. 提示词模板**
+
+`System Prompt`
+```text
+你是 {{brand_name}} 的智能助手 {{bot_name}}，服务于 {{business_scene}}。
+
+你的目标：
+1. 准确识别用户意图。
+2. 信息充分时直接回答，信息不足时只追问一个最关键问题。
+3. 澄清总轮次不超过 {{clarify_max_rounds}}。
+4. 命中购买、报价、试用、合作、预约、投诉、售后时，优先进入留资、建单或转人工流程。
+5. 对无依据、超边界或高风险内容，不编造、不承诺，明确限制并提供替代方案。
+
+边界：
+- 只能基于系统规则、会话上下文、用户输入、检索结果回答。
+- 检索不足时不能臆造价格、时效、政策、能力。
+- 涉及 {{high_risk_topics}} 时必须谨慎、拒答或转人工。
+
+风格：
+- 口吻：{{tone}}
+- 原则：先结论，后说明；先解决，后解释；避免套话
+- 每次回复只推动一个下一步动作
+
+业务信息：
+- 品牌：{{brand_name}}
+- 产品范围：{{product_scope}}
+- 支持事项：{{supported_tasks}}
+- 不支持事项：{{unsupported_tasks}}
+- 人工渠道：{{human_handoff}}
+- 留资字段：{{lead_fields}}
+```
+
+`意图路由 Prompt`
+```text
+请根据用户最新消息、历史摘要、渠道信息，将会话识别为一种主意图：
+faq_consult / need_clarify / sales_lead / complaint_after_sales / small_talk / out_of_scope / risky_request
+
+输出 JSON：
+{
+  "intent": "",
+  "confidence": 0-1,
+  "reason": "",
+  "missing_slots": [],
+  "suggested_next_action": ""
+}
+```
+
+`知识问答 Prompt`
+```text
+你现在扮演知识问答助手，只能基于以下材料回答：
+{{retrieved_context}}
+
+要求：
+1. 先给结论
+2. 明确适用条件和注意事项
+3. 没有依据时直接说信息不足
+4. 不补充材料中没有的价格、时效、政策、功能
+```
+
+`澄清 Prompt`
+```text
+你现在扮演信息补齐助手。
+目标：当信息不足时，只追问一个最关键问题。
+规则：
+- 问题最短、最具体、最容易回答
+- 不一次性索取多个字段
+- 达到 {{clarify_max_rounds}} 后停止追问，改为转人工或留资
+```
+
+`留资 Prompt`
+```text
+你现在扮演线索收集助手。
+触发条件：用户明确表达购买、报价、试用、合作、预约意向。
+目标：以最低打扰完成必要留资。
+必要字段：{{lead_fields}}
+规则：
+- 一次只收 1-2 个字段
+- 已有字段不重复问
+- 用户拒绝留联系方式时不施压，改给人工入口
+- 收集完成后告知预计响应时间 {{sla_text}}
+```
+
+`投诉/售后 Prompt`
+```text
+你现在扮演售后受理助手。
+原则：
+1. 先共情，不争辩
+2. 复述问题，确认理解一致
+3. 收集最少必要证据：{{ticket_fields}}
+4. 能建单就先建单
+5. 不给未经确认的承诺
+```
+
+`用户上下文封装模板`
+```text
+[用户基础信息]
+用户ID：{{user_id}}
+渠道：{{channel}}
+昵称：{{user_name}}
+标签：{{user_tags}}
+
+[历史摘要]
+{{conversation_summary}}
+
+[当前消息]
+{{user_message}}
+
+[结构化上下文]
+- 当前意图：{{current_intent}}
+- 已收集字段：{{known_slots}}
+- 缺失字段：{{missing_slots}}
+- 澄清轮次：{{clarify_round}}
+- 风险标记：{{risk_flag}}
+
+[检索内容]
+{{retrieved_context}}
+```
+
+**4. 数据表结构**
+
+建议一期保留 8 张核心表。
+
+`users`
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | 用户主键 |
+| external_user_id | varchar(64) | 渠道侧用户ID |
+| channel | varchar(32) | 渠道来源 |
+| nickname | varchar(64) | 昵称 |
+| phone | varchar(32) null | 手机号 |
+| wechat_id | varchar(64) null | 微信号 |
+| tags_json | json | 用户标签 |
+| status | varchar(20) | new / consulting / converted |
+| created_at | datetime | 创建时间 |
+| updated_at | datetime | 更新时间 |
+
+索引：
+- `uk_channel_user(channel, external_user_id)`
+- `idx_phone(phone)`
+
+`conversations`
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | 会话ID |
+| user_id | bigint FK | 关联用户 |
+| channel | varchar(32) | 渠道 |
+| session_key | varchar(128) | 外部会话标识 |
+| current_intent | varchar(50) | 当前意图 |
+| clarify_round | int | 当前澄清轮次 |
+| summary_text | text | 历史摘要 |
+| risk_flag | varchar(20) | none / low / high |
+| handoff_status | varchar(20) | none / pending / done |
+| created_at | datetime | 创建时间 |
+| updated_at | datetime | 更新时间 |
+
+索引：
+- `idx_user_id(user_id)`
+- `idx_session_key(session_key)`
+
+`messages`
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | 消息ID |
+| conversation_id | bigint FK | 会话ID |
+| role | varchar(20) | user / assistant / system |
+| message_type | varchar(20) | text / image / event |
+| content | text | 消息内容 |
+| structured_json | json null | 结构化输出 |
+| intent | varchar(50) null | 本轮识别意图 |
+| model_name | varchar(50) null | 使用模型 |
+| tokens_in | int null | 输入tokens |
+| tokens_out | int null | 输出tokens |
+| created_at | datetime | 创建时间 |
+
+索引：
+- `idx_conversation_id(conversation_id)`
+- `idx_created_at(created_at)`
+
+`leads`
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | 线索ID |
+| user_id | bigint FK | 用户ID |
+| conversation_id | bigint FK | 来源会话 |
+| lead_source | varchar(32) | 来源渠道 |
+| name | varchar(64) null | 姓名 |
+| company | varchar(128) null | 公司 |
+| contact_phone | varchar(32) null | 电话 |
+| contact_wechat | varchar(64) null | 微信 |
+| demand_summary | text | 需求摘要 |
+| lead_level | varchar(20) | cold / warm / hot |
+| status | varchar(20) | new / assigned / contacted / closed |
+| owner_id | bigint null | 跟进人 |
+| created_at | datetime | 创建时间 |
+| updated_at | datetime | 更新时间 |
+
+索引：
+- `idx_user_id(user_id)`
+- `idx_status(status)`
+- `idx_lead_level(lead_level)`
+
+`tickets`
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | 工单ID |
+| user_id | bigint FK | 用户ID |
+| conversation_id | bigint FK | 来源会话 |
+| ticket_no | varchar(64) | 工单号 |
+| category | varchar(32) | complaint / after_sales / delivery / refund |
+| order_no | varchar(64) null | 订单号 |
+| issue_desc | text | 问题描述 |
+| evidence_json | json null | 截图、附件、时间等 |
+| priority | varchar(20) | low / medium / high |
+| status | varchar(20) | open / processing / resolved / closed |
+| assignee_id | bigint null | 处理人 |
+| created_at | datetime | 创建时间 |
+| updated_at | datetime | 更新时间 |
+
+索引：
+- `uk_ticket_no(ticket_no)`
+- `idx_user_id(user_id)`
+- `idx_status(status)`
+
+`knowledge_documents`
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | 文档ID |
+| doc_title | varchar(256) | 标题 |
+| doc_type | varchar(32) | faq / manual / policy |
+| content_text | longtext | 原文 |
+| status | varchar(20) | draft / active / archived |
+| version_no | int | 版本号 |
+| created_at | datetime | 创建时间 |
+| updated_at | datetime | 更新时间 |
+
+`knowledge_chunks`
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | 分片ID |
+| document_id | bigint FK | 文档ID |
+| chunk_text | text | 切片文本 |
+| chunk_index | int | 分片序号 |
+| embedding_id | varchar(128) null | 向量ID |
+| created_at | datetime | 创建时间 |
+
+索引：
+- `idx_document_id(document_id)`
+- `idx_embedding_id(embedding_id)`
+
+`conversation_events`
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | 事件ID |
+| conversation_id | bigint FK | 会话ID |
+| event_type | varchar(50) | intent_detected / lead_created / ticket_created / handoff |
+| event_payload | json | 事件内容 |
+| created_at | datetime | 创建时间 |
+
+索引：
+- `idx_conversation_id(conversation_id)`
+- `idx_event_type(event_type)`
+
+**一期落地建议**
+- 技术架构先按 `API + 会话服务 + 编排层 + RAG + CRM/工单` 五块实现。
+- 会话状态先收敛成 `新访客 / 咨询中 / 已留资`。
+- 高价值触发词先只保留：`价格、报价、试用、演示、合作、购买、联系销售`。
+- 如果你要，我下一步可以直接继续补两份可落地材料：`接口 API 清单` 和 `后台管理端页面原型清单`。
+```
