@@ -548,9 +548,9 @@
       appState.debug = debug;
       const state = appState.state || {};
       const llmSummary = debug?.llm_summary || {};
-      const llmCall = debug?.llm_calls?.combined || debug?.llm_calls?.intent || debug?.llm_calls?.guidance || {
-        note: llmSummary.reason || '本轮没有调用 LLM。',
-      };
+      const llmCall = Object.keys(debug?.llm_calls || {}).length
+        ? debug.llm_calls
+        : { note: llmSummary.reason || '本轮没有调用 LLM。' };
 
       document.getElementById('intentJson').textContent = formatJson(debug?.intent || {});
       document.getElementById('planJson').textContent = formatJson(debug?.plan || {});

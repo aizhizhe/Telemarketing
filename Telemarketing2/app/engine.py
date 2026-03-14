@@ -29,9 +29,9 @@ QUESTION_MARKERS = ("?", "？", "吗", "么", "怎么", "为什么", "哪里", "
 CLOSE_MARKERS = ("没有了", "没了", "没有问题", "没有别的了", "先这样", "再见", "拜拜")
 STOP_MARKERS = ("别再打", "不要再打", "别再给我打电话", "不要给我打电话", "别联系了", "不需要", "不用了", "拉黑", "投诉你们", "停一下")
 PRIVACY_MARKERS = ("怎么有我电话", "哪来的电话", "谁给你电话", "谁把我的信息", "信息泄露", "隐私", "哪来的信息")
-IDENTITY_MARKERS = ("你是谁", "你哪位", "你找我干嘛", "什么机构")
+IDENTITY_MARKERS = ("你是谁", "你哪位", "你谁啊", "你谁", "你找我干嘛", "你找我做什么", "你是干嘛的", "什么机构")
 ROBOT_MARKERS = ("你是真人吗", "机器人", "AI吗", "自动回复吗")
-ROLE_MARKERS = ("你能帮我做什么", "你能做什么", "你是做什么的")
+ROLE_MARKERS = ("你能帮我做什么", "你能做什么", "你是做什么的", "你们是干嘛的", "你们做什么的")
 PING_MARKERS = ("在吗", "在不在", "喂")
 COMPLAINT_MARKERS = ("我要投诉", "售后", "退费", "退款", "迟到", "课时", "工单", "订单")
 RISKY_MARKERS = ("保证提分", "保分", "保证涨分", "直接承诺", "签保过")
@@ -169,7 +169,20 @@ class ConversationEngine:
             state.session_id = uuid4().hex
         rules = load_rules()
         flow_hits = self.materials.search_flow(node=NODE_OPENING, preferred_tags=["开场白+中性话术"], top_k=5)
-        opening = self._pick_opening(flow_hits)
+        opening_draft = self._pick_opening(flow_hits)
+        llm_calls: dict[str, Any] = {}
+        opening_judged = self._llm_finalize_reply(
+            user_text="",
+            state=state,
+            rules=rules,
+            intent={"primary_intent": "opening", "source": "local_fast_path"},
+            plan={"node": NODE_OPENING, "missing_goals": state.missing_goals(), "requires_llm": False},
+            flow_hits=flow_hits,
+            professional_hits=[],
+            draft_reply=opening_draft,
+        )
+        llm_calls["reply_judge"] = opening_judged["llm_call"]
+        opening = opening_judged["reply"] or opening_draft
         state.history.append({"role": "assistant", "content": opening})
         return self._result(
             state=state,
@@ -182,8 +195,8 @@ class ConversationEngine:
             plan={"node": NODE_OPENING, "missing_goals": state.missing_goals(), "requires_llm": False},
             flow_hits=flow_hits,
             professional_hits=[],
-            segments={"guidance_prefix": opening, "professional": "", "guidance_suffix": "", "final_reply": opening},
-            llm_calls={},
+            segments={"guidance_prefix": opening_draft, "professional": "", "guidance_suffix": "", "draft_reply": opening_draft, "final_reply": opening},
+            llm_calls=llm_calls,
         )
 
     def process_turn(self, user_text: str, state_dict: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -194,9 +207,23 @@ class ConversationEngine:
         user_text = _normalize_text(user_text)
 
         if state.ended:
+            draft_reply = "本轮对话已经结束了，您可以重新开始一组新的测试。"
+            llm_calls = {}
+            judged = self._llm_finalize_reply(
+                user_text=user_text,
+                state=state,
+                rules=rules,
+                intent={"primary_intent": "ended", "source": "local_fast_path"},
+                plan={"node": state.current_node, "missing_goals": state.missing_goals(), "requires_llm": False},
+                flow_hits=[],
+                professional_hits=[],
+                draft_reply=draft_reply,
+            )
+            llm_calls["reply_judge"] = judged["llm_call"]
+            reply = judged["reply"] or draft_reply
             return self._result(
                 state=state,
-                reply="本轮对话已经结束了，您可以重新开始一组新的测试。",
+                reply=reply,
                 user_message=user_text,
                 event_type="ended_guard",
                 rules=rules,
@@ -205,14 +232,28 @@ class ConversationEngine:
                 plan={"node": state.current_node, "missing_goals": state.missing_goals(), "requires_llm": False},
                 flow_hits=[],
                 professional_hits=[],
-                segments={},
-                llm_calls={},
+                segments={"guidance_prefix": draft_reply, "professional": "", "guidance_suffix": "", "draft_reply": draft_reply, "final_reply": reply},
+                llm_calls=llm_calls,
             )
 
         if not user_text:
+            draft_reply = "您可以直接输入一段家长回复，我会继续沿着链路往下走。"
+            llm_calls = {}
+            judged = self._llm_finalize_reply(
+                user_text=user_text,
+                state=state,
+                rules=rules,
+                intent={"primary_intent": "empty", "source": "local_fast_path"},
+                plan={"node": state.current_node, "missing_goals": state.missing_goals(), "requires_llm": False},
+                flow_hits=[],
+                professional_hits=[],
+                draft_reply=draft_reply,
+            )
+            llm_calls["reply_judge"] = judged["llm_call"]
+            reply = judged["reply"] or draft_reply
             return self._result(
                 state=state,
-                reply="您可以直接输入一段家长回复，我会继续沿着链路往下走。",
+                reply=reply,
                 user_message=user_text,
                 event_type="empty_input",
                 rules=rules,
@@ -221,8 +262,8 @@ class ConversationEngine:
                 plan={"node": state.current_node, "missing_goals": state.missing_goals(), "requires_llm": False},
                 flow_hits=[],
                 professional_hits=[],
-                segments={},
-                llm_calls={},
+                segments={"guidance_prefix": draft_reply, "professional": "", "guidance_suffix": "", "draft_reply": draft_reply, "final_reply": reply},
+                llm_calls=llm_calls,
             )
 
         state.turn_index += 1
@@ -239,7 +280,20 @@ class ConversationEngine:
             state.schedule_preference = extracted["schedule"]
 
         if state.close_prompted and _contains_any(user_text, CLOSE_MARKERS):
-            reply = "好的，那我这边就先不继续打扰您了，稍后按刚才确认的信息跟您微信对接，祝孩子学习顺利。"
+            draft_reply = "好的，那我这边就先不继续打扰您了，稍后按刚才确认的信息跟您微信对接，祝孩子学习顺利。"
+            llm_calls = {}
+            judged = self._llm_finalize_reply(
+                user_text=user_text,
+                state=state,
+                rules=rules,
+                intent={"primary_intent": "close_signal", "source": "local_fast_path", "close_signal": True},
+                plan={"node": NODE_INVITE, "missing_goals": state.missing_goals(), "requires_llm": False},
+                flow_hits=[],
+                professional_hits=[],
+                draft_reply=draft_reply,
+            )
+            llm_calls["reply_judge"] = judged["llm_call"]
+            reply = judged["reply"] or draft_reply
             state.ended = True
             state.history.append({"role": "assistant", "content": reply})
             return self._result(
@@ -253,8 +307,8 @@ class ConversationEngine:
                 plan={"node": NODE_INVITE, "missing_goals": state.missing_goals(), "requires_llm": False},
                 flow_hits=[],
                 professional_hits=[],
-                segments={"guidance_prefix": reply, "professional": "", "guidance_suffix": "", "final_reply": reply},
-                llm_calls={},
+                segments={"guidance_prefix": draft_reply, "professional": "", "guidance_suffix": "", "draft_reply": draft_reply, "final_reply": reply},
+                llm_calls=llm_calls,
             )
 
         base_intent = self._classify_turn(user_text, extracted)
@@ -311,7 +365,19 @@ class ConversationEngine:
 
         state.last_intent = intent
         professional = self._build_professional_segment(professional_hits, state, prefix=prefix)
-        reply = self._assemble_reply(prefix=prefix, professional=professional, suffix=suffix)
+        draft_reply = self._assemble_reply(prefix=prefix, professional=professional, suffix=suffix)
+        judged = self._llm_finalize_reply(
+            user_text=user_text,
+            state=state,
+            rules=rules,
+            intent=intent,
+            plan=plan,
+            flow_hits=flow_hits,
+            professional_hits=professional_hits,
+            draft_reply=draft_reply,
+        )
+        llm_calls["reply_judge"] = judged["llm_call"]
+        reply = judged["reply"] or draft_reply
 
         if "试听" in reply or "体验" in reply:
             state.trial_invited = True
@@ -338,7 +404,7 @@ class ConversationEngine:
             plan={**plan, "requires_llm": self._needs_llm(base_intent, plan)},
             flow_hits=flow_hits,
             professional_hits=professional_hits,
-            segments={"guidance_prefix": prefix, "professional": professional, "guidance_suffix": suffix, "final_reply": reply},
+            segments={"guidance_prefix": prefix, "professional": professional, "guidance_suffix": suffix, "draft_reply": draft_reply, "final_reply": reply},
             llm_calls=llm_calls,
         )
 
@@ -466,7 +532,10 @@ class ConversationEngine:
         }
 
     def _needs_llm(self, base_intent: dict[str, Any], plan: dict[str, Any]) -> bool:
-        if base_intent.get("fast_case") in {"stop_call", "privacy", "complaint", "risky", "identity", "robot", "role_explain", "small_talk", "slot_only", "off_topic", "trial_request"}:
+        fast_case = base_intent.get("fast_case")
+        if fast_case in {"identity", "robot", "role_explain"}:
+            return True
+        if fast_case in {"stop_call", "privacy", "complaint", "risky", "small_talk", "slot_only", "off_topic", "trial_request"}:
             return False
         return bool(plan["requires_professional"])
 
@@ -554,6 +623,98 @@ class ConversationEngine:
             "prefix": clean_text(parsed.get("prefix")) or self._fallback_prefix(base_intent, user_text=user_text, state=state),
             "suffix": clean_text(parsed.get("suffix_question")) or self._default_suffix(state, base_intent),
             "llm_call": llm_call,
+        }
+
+    def _llm_finalize_reply(
+        self,
+        *,
+        user_text: str,
+        state: ConversationState,
+        rules: dict[str, str],
+        intent: dict[str, Any],
+        plan: dict[str, Any],
+        flow_hits: list[dict[str, Any]],
+        professional_hits: list[dict[str, Any]],
+        draft_reply: str,
+    ) -> dict[str, Any]:
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    f"{rules['global_objective']}\n"
+                    f"{rules['retrieval_policy']}\n"
+                    f"{rules['assembly_policy']}\n"
+                    f"{rules['closing_policy']}\n"
+                    "你现在只做最终回复复判。"
+                    "你会拿到：上文、当前用户输入、命中的专业素材、流程素材、以及系统草稿回复。"
+                    "你的任务是判断草稿回复是否像真人电话销售，并输出更合适的最终回复。"
+                    "要求："
+                    "1. 专业事实只能使用提供的 professional_hits，不能编造；"
+                    "2. 可以重写语气、顺序和表达，但不能丢掉本轮核心目标；"
+                    "3. 回复要像真人，避免模板味、避免空话、避免重复；"
+                    "4. 先回应家长，再给专业信息，最后自然推进流程；"
+                    "5. 一般控制在 2 到 3 句；"
+                    "6. 只输出 JSON，字段必须包含 final_reply, verdict, notes。"
+                ),
+            },
+            {
+                "role": "user",
+                "content": json.dumps(
+                    {
+                        "latest_user_message": user_text,
+                        "recent_history": state.history[-8:],
+                        "known_slots": {
+                            "grade": state.grade,
+                            "subject": state.subject,
+                            "wechat_contact": state.wechat_contact,
+                            "schedule_preference": state.schedule_preference,
+                            "trial_invited": state.trial_invited,
+                        },
+                        "intent": intent,
+                        "plan": plan,
+                        "draft_reply": draft_reply,
+                        "flow_reference": [
+                            {
+                                "tag": hit.get("tag"),
+                                "content": split_sentences(str(hit.get("content") or ""), limit=1),
+                            }
+                            for hit in flow_hits[:3]
+                        ],
+                        "professional_reference": [
+                            {
+                                "title": hit.get("title"),
+                                "category": hit.get("category"),
+                                "content": split_sentences(str(hit.get("content") or ""), limit=2),
+                            }
+                            for hit in professional_hits[:4]
+                        ],
+                    },
+                    ensure_ascii=False,
+                ),
+            },
+        ]
+        llm_call = self.llm.chat(
+            stage="reply_judge",
+            messages=messages,
+            temperature=0.2,
+            max_tokens=320,
+            model=self.llm.settings.fast_chat_model,
+        )
+        parsed = _safe_json_parse(llm_call["response_text"]) or {}
+        final_reply = clean_text(parsed.get("final_reply")) or draft_reply
+        final_reply = self._assemble_reply(prefix=final_reply, professional="", suffix="")
+        return {
+            "reply": final_reply,
+            "verdict": clean_text(parsed.get("verdict")),
+            "notes": clean_text(parsed.get("notes")),
+            "llm_call": {
+                **llm_call,
+                "parsed": {
+                    "final_reply": final_reply,
+                    "verdict": clean_text(parsed.get("verdict")),
+                    "notes": clean_text(parsed.get("notes")),
+                },
+            },
         }
 
     def _local_intent(self, base_intent: dict[str, Any]) -> dict[str, Any]:
@@ -854,14 +1015,27 @@ class ConversationEngine:
         }
 
     def _summarize_llm_usage(self, *, intent: dict[str, Any], llm_calls: dict[str, Any]) -> dict[str, Any]:
-        if llm_calls.get("combined"):
-            call = llm_calls["combined"]
+        if llm_calls:
+            stages = []
+            models = []
+            if llm_calls.get("combined"):
+                stages.append("意图+引导")
+                models.append(llm_calls["combined"].get("model"))
+            if llm_calls.get("reply_judge"):
+                stages.append("回复复判")
+                models.append(llm_calls["reply_judge"].get("model"))
+            if len(stages) > 1:
+                mode = "multi_stage"
+            elif llm_calls.get("reply_judge"):
+                mode = "final_only"
+            else:
+                mode = "combined"
             return {
                 "used": True,
-                "mode": "combined",
-                "stage": call.get("stage"),
-                "model": call.get("model"),
-                "reason": "本轮走了单次合并 LLM 调用，用于意图识别和引导话术生成。",
+                "mode": mode,
+                "stage": " + ".join(stages),
+                "model": ", ".join([item for item in models if item]),
+                "reason": "本轮最终回复由 LLM 生成；本地链路只负责提供草稿建议和命中素材。" if llm_calls.get("reply_judge") else "本轮走了单次合并 LLM 调用，用于意图识别和引导话术生成。",
             }
         source = intent.get("source") or "local_fast_path"
         reasons = {
