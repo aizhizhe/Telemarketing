@@ -646,6 +646,9 @@ class ConversationEngine:
         for hit in candidate_hits:
             segment = self._slice_professional_content(str(hit.get("content") or ""))
             sentence_norms = [_normalize_text(item) for item in _split_reply_sentences(segment)]
+            overlap_tokens = ("理解", "正常", "担心", "顾虑", "靠谱", "费用", "位置", "试听")
+            if len(sentence_norms) == 1 and prefix_norm and any(token in sentence_norms[0] and token in prefix_norm for token in overlap_tokens):
+                continue
             if sentence_norms and all(item == prefix_norm or item in prefix_norm or prefix_norm in item for item in sentence_norms):
                 continue
             chosen_hit = hit
@@ -653,6 +656,7 @@ class ConversationEngine:
             break
         if not chosen_segment:
             chosen_segment = self._slice_professional_content(str(chosen_hit.get("content") or ""))
+        chosen_segment = self._trim_professional_intro(chosen_segment, prefix)
         state.recent_professional_ids.append(chosen_hit["material_id"])
         state.recent_professional_ids = state.recent_professional_ids[-6:]
         return chosen_segment
@@ -669,6 +673,17 @@ class ConversationEngine:
             max_len = 130
         if len(segment) > max_len:
             segment = segment[:max_len].rstrip("，,；; ") + "。"
+        return segment
+
+    def _trim_professional_intro(self, segment: str, prefix: str) -> str:
+        sentences = _split_reply_sentences(segment)
+        if len(sentences) < 2:
+            return segment
+        prefix_norm = _normalize_text(prefix)
+        first_norm = _normalize_text(sentences[0])
+        overlap_tokens = ("理解", "正常", "担心", "顾虑", "位置", "费用", "试听", "靠谱")
+        if prefix_norm and any(token in first_norm and token in prefix_norm for token in overlap_tokens):
+            return " ".join(sentences[1:])
         return segment
 
     def _assemble_reply(self, *, prefix: str, professional: str, suffix: str) -> str:
@@ -740,14 +755,14 @@ class ConversationEngine:
         cleaned = clean_text(prefix)
         if not cleaned or not professional_hits:
             return cleaned
+        objection = base_intent.get("objection_label")
+        if objection == "价格顾虑":
+            return "先把费用问清楚很正常。"
+        if objection == "效果怀疑":
+            return "您先确认清楚再决定，这很正常。"
+        if objection == "孩子抗拒":
+            return "孩子有抵触情绪，这种情况很常见。"
         if any(keyword in cleaned for keyword in ("海淀", "线上", "校区", "费用", "报价", "试听", "老师", "匹配", "提分", "薄弱")):
-            objection = base_intent.get("objection_label")
-            if objection == "价格顾虑":
-                return "理解，先问费用很正常。"
-            if objection == "效果怀疑":
-                return "您先确认靠不靠谱，这个很正常。"
-            if objection == "孩子抗拒":
-                return "孩子有抵触情绪，这种情况很常见。"
             topics = base_intent.get("professional_topics") or []
             if "校区" in topics or "线上" in topics:
                 return "您先把位置问清楚，这个很正常。"
