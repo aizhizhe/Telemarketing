@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Telemarketing2 单 Agent 调试台</title>
+  <style>
+    :root {
+      --bg: #f4ede2;
+      --panel: rgba(255, 251, 245, 0.96);
+      --panel-strong: #fffdf9;
+      --line: #dbcbb6;
+      --text: #2d241c;
+      --muted: #7e6b58;
+      --accent: #9c4f2b;
+      --accent-deep: #70351b;
+      --ok: #215f47;
+      --warn: #8e5d10;
+      --shadow: 0 16px 40px rgba(87, 58, 31, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(156, 79, 43, 0.12), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(112, 53, 27, 0.10), transparent 28%),
+        linear-gradient(145deg, #f6f1e7 0%, #efe6d6 48%, #f7f2ea 100%);
+    }
+
+    .shell {
+      width: min(1500px, calc(100vw - 28px));
+      margin: 14px auto;
+      display: grid;
+      grid-template-columns: minmax(440px, 1.05fr) minmax(520px, 1fr);
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(219, 203, 182, 0.85);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .chat-shell,
+    .detail-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 28px);
+      overflow: hidden;
+    }
+
+    .hero,
+    .detail-top {
+      padding: 20px 22px 14px;
+      border-bottom: 1px solid rgba(219, 203, 182, 0.85);
+      background:
+        linear-gradient(135deg, rgba(156, 79, 43, 0.14), rgba(156, 79, 43, 0.02)),
+        linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    .hero h1 {
+      font-size: 26px;
+      letter-spacing: 0.02em;
+    }
+
+    .hero p,
+    .card p,
+    .mini-note {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .hero-meta,
+    .goal-list,
+    .tabs,
+    .composer-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chip,
+    .goal,
+    .tab {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(112, 53, 27, 0.16);
+      background: rgba(255,255,255,0.76);
+      color: var(--accent-deep);
+      font-size: 12px;
+    }
+
+    .goal.done {
+      border-color: rgba(33, 95, 71, 0.16);
+      background: rgba(33, 95, 71, 0.08);
+      color: var(--ok);
+    }
+
+    .goal.pending {
+      border-color: rgba(142, 93, 16, 0.18);
+      background: rgba(142, 93, 16, 0.08);
+      color: var(--warn);
+    }
+
+    .tab {
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .messages,
+    .detail-body {
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .bubble {
+      max-width: 88%;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(219, 203, 182, 0.8);
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .bubble.user {
+      align-self: flex-end;
+      background: #efe1d1;
+    }
+
+    .bubble.assistant {
+      align-self: flex-start;
+      background: #fffaf3;
+    }
+
+    .bubble.system {
+      align-self: center;
+      max-width: 94%;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.7);
+    }
+
+    .composer {
+      padding: 16px 20px 20px;
+      border-top: 1px solid rgba(219, 203, 182, 0.85);
+      background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,252,247,0.85));
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 14px;
+      font: inherit;
+      color: var(--text);
+      background: rgba(255,255,255,0.92);
+      outline: none;
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    textarea:focus,
+    input:focus {
+      border-color: rgba(156, 79, 43, 0.7);
+      box-shadow: 0 0 0 4px rgba(156, 79, 43, 0.10);
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 16px;
+      padding: 12px 16px;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.6; cursor: wait; transform: none; }
+
+    .primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      color: #fff;
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.86);
+      color: var(--accent-deep);
+      border: 1px solid rgba(112, 53, 27, 0.14);
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .status-card,
+    .card,
+    .item {
+      background: var(--panel-strong);
+      border: 1px solid rgba(219, 203, 182, 0.82);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .status-card .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .status-card .value {
+      font-size: 14px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .tab-panel.active {
+      display: flex;
+    }
+
+    .stack,
+    .rule-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .item strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .item .meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .rule-block label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: var(--accent-deep);
+      font-weight: 700;
+    }
+
+    .rule-block textarea {
+      min-height: 116px;
+      font-size: 13px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px;
+      border-radius: 14px;
+      background: #2e241c;
+      color: #f6ead7;
+      font-size: 12px;
+      line-height: 1.65;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @media (max-width: 1180px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .chat-shell,
+      .detail-shell {
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="panel chat-shell">
+      <div class="hero">
+        <h1>Telemarketing2 单 Agent 调试台</h1>
+        <p>左侧输入家长回复，右侧查看意图、链路、素材命中、LLM 请求与响应、本地日志。现在是单 Agent + 链路 + 素材库模式。</p>
+        <div class="hero-meta">
+          <span class="chip" id="modelChip">主模型加载中</span>
+          <span class="chip" id="fastModelChip">快速模型加载中</span>
+          <span class="chip" id="envChip">环境加载中</span>
+          <span class="chip" id="statsChip">素材加载中</span>
+        </div>
+      </div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="composer">
+        <div class="composer-actions">
+          <button class="primary" id="startBtn">开始新对话</button>
+          <button class="secondary" id="resetBtn">清空会话</button>
+        </div>
+        <textarea id="userInput" placeholder="输入家长回复，例如：你们行不行？孩子初二数学一直提不上去。"></textarea>
+        <div class="composer-actions" style="margin-top: 12px; margin-bottom: 0;">
+          <button class="primary" id="sendBtn">发送并跑链路</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel detail-shell">
+      <div class="detail-top">
+        <div class="status-grid">
+          <div class="status-card">
+            <span class="label">当前节点</span>
+            <div class="value" id="currentNode">未开始</div>
+          </div>
+          <div class="status-card">
+            <span class="label">最后意图</span>
+            <div class="value" id="currentIntent">未识别</div>
+          </div>
+          <div class="status-card">
+            <span class="label">已收集信息</span>
+            <div class="value" id="slotSummary">暂无</div>
+          </div>
+          <div class="status-card">
+            <span class="label">LLM 状态</span>
+            <div class="value" id="llmSummary">暂无</div>
+          </div>
+        </div>
+
+        <div class="goal-list" id="goalList"></div>
+
+        <div class="tabs">
+          <button class="tab active" data-tab="trace">链路明细</button>
+          <button class="tab" data-tab="rules">规则配置</button>
+          <button class="tab" data-tab="llm">LLM 传输</button>
+          <button class="tab" data-tab="log">本地日志</button>
+        </div>
+      </div>
+
+      <div class="detail-body">
+        <div class="tab-panel active" id="tab-trace">
+          <div class="card">
+            <h2>本轮意图 JSON</h2>
+            <pre id="intentJson">等待对话开始...</pre>
+          </div>
+          <div class="card">
+            <h2>流程计划</h2>
+            <pre id="planJson">等待对话开始...</pre>
+          </div>
+          <div class="card">
+            <h2>Data2 流程命中</h2>
+            <div class="stack" id="flowHits"></div>
+          </div>
+          <div class="card">
+            <h2>Data 专业素材命中</h2>
+            <div class="stack" id="professionalHits"></div>
+          </div>
+          <div class="card">
+            <h2>最终拼接结果</h2>
+            <pre id="segmentJson">等待对话开始...</pre>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-rules">
+          <div class="card">
+            <h2>可编辑规则</h2>
+            <p>这里修改的是实际参与链路运行的规则文本。保存后，下一轮对话会立刻按新规则生效。</p>
+          </div>
+          <div class="rule-grid" id="ruleGrid"></div>
+          <div class="composer-actions" style="padding-bottom: 8px;">
+            <button class="primary" id="saveRulesBtn">保存规则</button>
+            <button class="secondary" id="reloadRulesBtn">重新加载规则</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-llm">
+          <div class="card">
+            <h2>LLM 使用说明</h2>
+            <pre id="llmSummaryJson">等待对话开始...</pre>
+          </div>
+          <div class="card">
+            <h2>本轮 LLM 请求与返回</h2>
+            <pre id="llmCallJson">等待对话开始...</pre>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-log">
+          <div class="card">
+            <h2>本地日志</h2>
+            <p>每一轮都会自动落盘，包含用户输入、最终回复、链路决策、素材命中、LLM 请求与返回。</p>
+          </div>
+          <div class="card">
+            <h2>日志位置</h2>
+            <pre id="traceJson">等待对话开始...</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const appState = {
+      state: null,
+      rules: {},
+      debug: null,
+    };
+
+    const messagesEl = document.getElementById('messages');
+    const userInputEl = document.getElementById('userInput');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const ruleGrid = document.getElementById('ruleGrid');
+
+    function formatJson(data) {
+      return JSON.stringify(data ?? {}, null, 2);
+    }
+
+    function addBubble(role, content) {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${role}`;
+      bubble.textContent = content;
+      messagesEl.appendChild(bubble);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function clearMessages() {
+      messagesEl.innerHTML = '';
+      addBubble('system', '点击“开始新对话”后，系统会先生成开场白。之后你可以不断输入家长回复，观察整条链路。');
+    }
+
+    function setTabs() {
+      document.querySelectorAll('.tab').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach((item) => item.classList.remove('active'));
+          document.querySelectorAll('.tab-panel').forEach((item) => item.classList.remove('active'));
+          button.classList.add('active');
+          document.getElementById(`tab-${button.dataset.tab}`).classList.add('active');
+        });
+      });
+    }
+
+    function renderGoals(state = {}) {
+      const list = document.getElementById('goalList');
+      list.innerHTML = '';
+      const mapping = [
+        ['grade', '年级'],
+        ['subject', '学科'],
+        ['wechat_contact', '微信号'],
+        ['trial_invited', '试听邀约'],
+      ];
+      mapping.forEach(([key, label]) => {
+        const chip = document.createElement('span');
+        const done = key === 'trial_invited' ? !!state[key] : !!state[key];
+        chip.className = `goal ${done ? 'done' : 'pending'}`;
+        chip.textContent = `${label}${done ? ' 已完成' : ' 未完成'}`;
+        list.appendChild(chip);
+      });
+    }
+
+    function renderHits(containerId, hits, metaBuilder) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      if (!hits || !hits.length) {
+        const empty = document.createElement('div');
+        empty.className = 'item';
+        empty.textContent = '本轮未命中。';
+        container.appendChild(empty);
+        return;
+      }
+      hits.forEach((hit) => {
+        const item = document.createElement('div');
+        item.className = 'item';
+        const title = document.createElement('strong');
+        title.textContent = hit.title || hit.tag || hit.node || '命中结果';
+        const body = document.createElement('div');
+        body.textContent = hit.content || '';
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = metaBuilder(hit);
+        item.appendChild(title);
+        item.appendChild(body);
+        item.appendChild(meta);
+        container.appendChild(item);
+      });
+    }
+
+    function renderRules() {
+      ruleGrid.innerHTML = '';
+      Object.entries(appState.rules).forEach(([key, value]) => {
+        const block = document.createElement('div');
+        block.className = 'rule-block';
+        const label = document.createElement('label');
+        label.htmlFor = `rule-${key}`;
+        label.textContent = key;
+        const textarea = document.createElement('textarea');
+        textarea.id = `rule-${key}`;
+        textarea.dataset.ruleKey = key;
+        textarea.value = value;
+        block.appendChild(label);
+        block.appendChild(textarea);
+        ruleGrid.appendChild(block);
+      });
+    }
+
+    function collectRulesFromForm() {
+      const updated = {};
+      document.querySelectorAll('[data-rule-key]').forEach((el) => {
+        updated[el.dataset.ruleKey] = el.value;
+      });
+      return updated;
+    }
+
+    function renderDebug(debug) {
+      appState.debug = debug;
+      const state = appState.state || {};
+      const llmSummary = debug?.llm_summary || {};
+      const llmCall = debug?.llm_calls?.combined || debug?.llm_calls?.intent || debug?.llm_calls?.guidance || {
+        note: llmSummary.reason || '本轮没有调用 LLM。',
+      };
+
+      document.getElementById('intentJson').textContent = formatJson(debug?.intent || {});
+      document.getElementById('planJson').textContent = formatJson(debug?.plan || {});
+      document.getElementById('segmentJson').textContent = formatJson(debug?.segments || {});
+      document.getElementById('llmSummaryJson').textContent = formatJson(llmSummary);
+      document.getElementById('llmCallJson').textContent = formatJson(llmCall);
+      document.getElementById('traceJson').textContent = formatJson(debug?.trace || {});
+
+      renderHits('flowHits', debug?.flow_hits, (hit) => `节点: ${hit.node || '-'} | 标签: ${hit.tag || '-'} | 分数: ${hit.score ?? '-'}`);
+      renderHits('professionalHits', debug?.professional_hits, (hit) => `来源: ${hit.source_file || '-'} | 类别: ${hit.category || '-'} | 分数: ${hit.score ?? '-'}`);
+
+      renderGoals(state);
+
+      document.getElementById('currentNode').textContent = debug?.plan?.node || state.current_node || '未开始';
+      document.getElementById('currentIntent').textContent = debug?.intent?.primary_intent || '未识别';
+      document.getElementById('slotSummary').textContent = `年级: ${state.grade || '未收集'} | 学科: ${state.subject || '未收集'} | 微信: ${state.wechat_contact || '未收集'}`;
+      document.getElementById('llmSummary').textContent = llmSummary.reason || '暂无';
+    }
+
+    async function fetchBootstrap() {
+      const res = await fetch('/api/bootstrap');
+      const data = await res.json();
+      appState.rules = data.rules || {};
+      renderRules();
+      document.getElementById('modelChip').textContent = `主模型: ${data.model || '-'}`;
+      document.getElementById('fastModelChip').textContent = `快速模型: ${data.fast_model || '-'}`;
+      document.getElementById('envChip').textContent = `配置来源: ${data.env_source || '-'}`;
+      document.getElementById('statsChip').textContent = `Data: ${data.material_stats.professional_materials} | Data2: ${data.material_stats.flow_materials} | 规则: ${data.material_stats.flow_rules}`;
+    }
+
+    async function startConversation() {
+      startBtn.disabled = true;
+      try {
+        appState.state = null;
+        clearMessages();
+        const res = await fetch('/api/chat/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state: null }),
+        });
+        const data = await res.json();
+        appState.state = data.state;
+        addBubble('assistant', data.reply);
+        renderDebug(data.debug);
+      } finally {
+        startBtn.disabled = false;
+      }
+    }
+
+    async function sendTurn() {
+      const message = userInputEl.value.trim();
+      if (!message) return;
+      sendBtn.disabled = true;
+      userInputEl.value = '';
+      addBubble('user', message);
+      try {
+        const res = await fetch('/api/chat/turn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, state: appState.state }),
+        });
+        const data = await res.json();
+        appState.state = data.state;
+        addBubble('assistant', data.reply);
+        renderDebug(data.debug);
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    async function saveRules() {
+      const rules = collectRulesFromForm();
+      const res = await fetch('/api/rules', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rules }),
+      });
+      const data = await res.json();
+      appState.rules = data.rules || {};
+      renderRules();
+    }
+
+    async function reloadRules() {
+      const res = await fetch('/api/rules');
+      const data = await res.json();
+      appState.rules = data.rules || {};
+      renderRules();
+    }
+
+    startBtn.addEventListener('click', startConversation);
+    resetBtn.addEventListener('click', () => {
+      appState.state = null;
+      appState.debug = null;
+      clearMessages();
+      renderDebug({});
+    });
+    sendBtn.addEventListener('click', sendTurn);
+    userInputEl.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendTurn();
+      }
+    });
+    document.getElementById('saveRulesBtn').addEventListener('click', saveRules);
+    document.getElementById('reloadRulesBtn').addEventListener('click', reloadRules);
+
+    setTabs();
+    clearMessages();
+    renderDebug({});
+    fetchBootstrap();
+  </script>
+</body>
+</html>

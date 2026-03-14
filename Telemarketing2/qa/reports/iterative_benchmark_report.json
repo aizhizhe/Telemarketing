@@ -1,0 +1,1439 @@
+{
+  "scenario_count": 100,
+  "total_checks": 1149,
+  "passed_checks": 1146,
+  "accuracy": 0.9973890339425587,
+  "avg_elapsed_seconds": 1.4901694339996903,
+  "failures": [
+    {
+      "scenario_id": "already_have_018",
+      "category": "already_have",
+      "failed_checks": [
+        {
+          "name": "must_include_判断_效果",
+          "passed": false,
+          "detail": "缺少关键词组 ['判断', '效果']"
+        }
+      ],
+      "conversation": [
+        {
+          "role": "assistant",
+          "text": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？",
+          "debug": {
+            "active_rules": {
+              "global_objective": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。",
+              "intent_system_prompt": "你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。",
+              "guidance_system_prompt": "你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。",
+              "retrieval_policy": "专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。",
+              "assembly_policy": "最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。",
+              "closing_policy": "只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。"
+            },
+            "slot_extract": {},
+            "intent": {
+              "primary_intent": "opening",
+              "source": "local_fast_path"
+            },
+            "plan": {
+              "node": "流程引导库-开场节点",
+              "missing_goals": [
+                "grade_collected",
+                "subject_collected",
+                "trial_invited",
+                "wechat_collected"
+              ],
+              "requires_llm": false
+            },
+            "flow_hits": [
+              {
+                "material_id": "flow-1",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-2",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "2. 喂 家长您好，我们是人大附第二课堂，专注初高中一对一学科辅导，想问下孩子有没有哪科需要提升的呀？",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-3",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "3. 喂 您好，家长您好，我们重点学校一线在职老师，专做一对一提分的，老师都是海淀六小强，像人大附，清华附等一线重点学校的老师，提分有把握，请问孩子有没有哪些科目需要提升的？",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-4",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "4. 喂  家长您好，我们是人大附第二课堂的，专做中高考一对一学科规划提升的，全部都是海淀一线在职老师，能快速提高100-120分，孩子现在学习情况怎么样？",
+                "score": 5.0
+              }
+            ],
+            "professional_hits": [],
+            "segments": {
+              "guidance_prefix": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？",
+              "professional": "",
+              "guidance_suffix": "",
+              "final_reply": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？"
+            },
+            "llm_calls": {},
+            "material_stats": {
+              "professional_materials": 220,
+              "flow_materials": 65,
+              "flow_rules": 14
+            }
+          }
+        },
+        {
+          "role": "user",
+          "text": "我们已经在补课了"
+        },
+        {
+          "role": "assistant",
+          "text": "已经有安排说明您对孩子学习很上心，这挺好的。 孩子现在学习情况怎么样？",
+          "debug": {
+            "active_rules": {
+              "global_objective": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。",
+              "intent_system_prompt": "你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。",
+              "guidance_system_prompt": "你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。",
+              "retrieval_policy": "专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。",
+              "assembly_policy": "最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。",
+              "closing_policy": "只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。"
+            },
+            "slot_extract": {
+              "grade": null,
+              "subject": null,
+              "wechat": null,
+              "schedule": null
+            },
+            "intent": {
+              "primary_intent": "objection",
+              "objection_label": "已报班",
+              "emotion_needed": true,
+              "professional_needed": true,
+              "flow_break": false,
+              "return_to_flow": true,
+              "close_signal": false,
+              "tone_hint": "共情+转场+拉回流程",
+              "style_notes": "语气自然，先共情再拉回流程",
+              "source": "single_llm_call"
+            },
+            "plan": {
+              "node": "流程引导库-讲优势节点",
+              "preferred_flow_tags": [
+                "激发危机感+共情",
+                "分析价值+问题分析",
+                "分析价值+价值塑造+信任背书"
+              ],
+              "missing_goals": [
+                "grade_collected",
+                "subject_collected",
+                "trial_invited",
+                "wechat_collected"
+              ],
+              "requires_professional": true,
+              "next_goal": "grade_collected",
+              "requires_llm": true
+            },
+            "flow_hits": [
+              {
+                "material_id": "flow-22",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+问题分析",
+                "scene": "激发危机感节点完成后，按“年级+科目”双标签触发",
+                "content": "（三年级+数学）孩子数学差，核心不只是粗心，更重要的是解题思路没掌握，比如应用题不会找数量关系，计算题不会简便方法，越练越抵触，其实只要找对方法，针对性练习，很快就能提升。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-23",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+问题分析",
+                "scene": "激发危机感节点完成后，按“年级+科目”双标签触发",
+                "content": "（初二+英语）孩子英语完形差，除了词汇语境运用不足，还有语法知识点不扎实，比如时态、从句不会用，导致上下文衔接不上，做题总出错，只要针对性补语法、练语境，就能明显改善。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-24",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+价值塑造+信任背书",
+                "scene": "分析价值+问题分析触发后，按“年级+科目”双标签触发",
+                "content": "（三年级+数学）针对孩子数学解题思路不清晰、粗心的问题，我们海淀的数学老师，都是带过多年小学毕业班的一线老师，会专门教孩子解题技巧，比如应用题找数量关系、计算题简便方法，一道题拆成基础知识点，孩子能快速掌握；课后还有专属助教，盯着孩子练题、批改作业，及时纠正错误，确保孩子能真正学会。我们也是海淀教委认证的白名单机构，办学20多年，很多三年级孩子跟着老师学1-2个月，数学成绩都能提升10-20分，家长反馈都很好。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-25",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+价值塑造+信任背书",
+                "scene": "分析价值+问题分析触发后，按“年级+科目”双标签触发",
+                "content": "（初二+英语）针对孩子英语完形的词汇语境运用和语法薄弱问题，我们的海淀英语老师，擅长拆解完形考点，教孩子如何结合上下文猜词、运用语法知识点，还会搭配专属练习题，针对性强化；同时会帮孩子梳理词汇、语法体系，夯实基础。我们是海淀白名单机构，所有老师都是一线在职老师，带过多年初二、初三毕业班，很多孩子学完完形正确率能提升30%以上。",
+                "score": 5.0
+              }
+            ],
+            "professional_hits": [
+              {
+                "material_id": "objection-76",
+                "source_file": "异议答题库(1).xlsx",
+                "category": "objection",
+                "title": "异议+已报班_先评估效果+拉回主线",
+                "scene": "家长说孩子已经在其他机构或老师处补习",
+                "content": "已经有安排说明您对孩子学习很上心，这挺好的。关键不在于报没报，而在于现在的辅导是不是正好解决了孩子的问题。您要是不介意，可以简单说下孩子现在几年级、补的是哪科、最近效果怎么样，我帮您判断是不是需要再优化一下。",
+                "score": 8.5
+              },
+              {
+                "material_id": "objection-1",
+                "source_file": "异议答题库(1).xlsx",
+                "category": "objection",
+                "title": "异议+没时间_异议轻处理+拉回主线",
+                "scene": "家长说自己忙，没时间陪同",
+                "content": "我特别懂，家长平时都忙，咱们的试听课和辅导课都可以灵活安排，周末、晚上都能上，不耽误您和孩子的时间，孩子现在学习情况怎么样？哪个年级呢？",
+                "score": 1.0
+              },
+              {
+                "material_id": "objection-2",
+                "source_file": "异议答题库(1).xlsx",
+                "category": "objection",
+                "title": "异议+没时间_异议轻处理+拉回主线",
+                "scene": "家长说孩子没时间上课",
+                "content": "孩子的学习是怎么安排的呢（通过了解孩子的课程安排，帮家长做决定） 时间就像海绵里的水，只要挤挤肯定是 有的，",
+                "score": 1.0
+              },
+              {
+                "material_id": "objection-3",
+                "source_file": "异议答题库(1).xlsx",
+                "category": "objection",
+                "title": "异议+没时间_异议轻处理+拉回主线",
+                "scene": "家长含糊说“没时间”无具体说明",
+                "content": "是呀，您平时比较忙，孩子的学习问题更应当重视啊，提前给孩子规划学习，再忙也得要提前规划， 咱们的辅导课支持线上线下灵活切换，不用特意跑线下，碎片化时间就能帮孩子补弱，咱先简单说说孩子哪科学得相对吃力？",
+                "score": 1.0
+              }
+            ],
+            "segments": {
+              "guidance_prefix": "已经有安排说明您对孩子学习很上心，这挺好的。",
+              "professional": "已经有安排说明您对孩子学习很上心，这挺好的。",
+              "guidance_suffix": "孩子现在学习情况怎么样？",
+              "final_reply": "已经有安排说明您对孩子学习很上心，这挺好的。 孩子现在学习情况怎么样？"
+            },
+            "llm_calls": {
+              "combined": {
+                "stage": "combined_intent_guidance",
+                "model": "qwen-turbo",
+                "request": [
+                  {
+                    "role": "system",
+                    "content": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。\n你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。\n你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。\n专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。\n最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。\n只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。\n只输出一个 JSON，字段必须包含：primary_intent, objection_label, emotion_needed, professional_needed, flow_break, return_to_flow,close_signal, tone_hint, prefix, suffix_question, style_notes。要求：前缀只做共情和转场，不重复专业正文；后缀只做拉回目标或礼貌收尾；语气像真人电话销售，不要空话，不要复读。"
+                  },
+                  {
+                    "role": "user",
+                    "content": "{\"latest_user_message\": \"我们已经在补课了\", \"recent_history\": [{\"role\": \"assistant\", \"content\": \"1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？\"}, {\"role\": \"user\", \"content\": \"我们已经在补课了\"}], \"known_slots\": {\"grade\": null, \"subject\": null, \"wechat_contact\": null, \"schedule_preference\": null, \"trial_invited\": false}, \"missing_goals\": [\"grade_collected\", \"subject_collected\", \"trial_invited\", \"wechat_collected\"], \"provisional_intent\": {\"primary_intent\": \"objection\", \"objection_label\": \"已报班\", \"professional_topics\": [], \"fast_case\": null, \"close_signal\": false, \"question_like\": false, \"needs_professional_answer\": true}, \"plan\": {\"node\": \"流程引导库-讲优势节点\", \"preferred_flow_tags\": [\"激发危机感+共情\", \"分析价值+问题分析\", \"分析价值+价值塑造+信任背书\"], \"missing_goals\": [\"grade_collected\", \"subject_collected\", \"trial_invited\", \"wechat_collected\"], \"requires_professional\": true, \"next_goal\": \"grade_collected\"}, \"flow_reference\": [\"（三年级+数学）孩子数学差，核心不只是粗心，更重要的是解题思路没掌握，比如应用题不会找数量关系，计算题不会简便方法，越练越抵触，其实只要找对方法，针对性练习，很快就能提升。\", \"（初二+英语）孩子英语完形差，除了词汇语境运用不足，还有语法知识点不扎实，比如时态、从句不会用，导致上下文衔接不上，做题总出错，只要针对性补语法、练语境，就能明显改善。\", \"（三年级+数学）针对孩子数学解题思路不清晰、粗心的问题，我们海淀的数学老师，都是带过多年小学毕业班的一线老师，会专门教孩子解题技巧，比如应用题找数量关系、计算题简便方法，一道题拆成基础知识点，孩子能快速掌握；课后还有专属助教，盯着孩子练题、批改作业，及时纠正错误，确保孩子能真正学会。我们也是海淀教委认证的白名单机构，办学20多年，很多三年级孩子跟着老师学1-2个月，数学成绩都能提升10-20分，家长反馈都很好。\"], \"professional_reference\": [{\"title\": \"异议+已报班_先评估效果+拉回主线\", \"category\": \"objection\", \"content\": \"已经有安排说明您对孩子学习很上心，这挺好的。\"}, {\"title\": \"异议+没时间_异议轻处理+拉回主线\", \"category\": \"objection\", \"content\": \"我特别懂，家长平时都忙，咱们的试听课和辅导课都可以灵活安排，周末、晚上都能上，不耽误您和孩子的时间，孩子现在学习情况怎么样？\"}, {\"title\": \"异议+没时间_异议轻处理+拉回主线\", \"category\": \"objection\", \"content\": \"孩子的学习是怎么安排的呢（通过了解孩子的课程安排，帮家长做决定） 时间就像海绵里的水，只要挤挤肯定是 有的，\"}]}"
+                  }
+                ],
+                "response_text": "{\n  \"primary_intent\": \"objection\",\n  \"objection_label\": \"已报班\",\n  \"emotion_needed\": true,\n  \"professional_needed\": true,\n  \"flow_break\": false,\n  \"return_to_flow\": true,\n  \"close_signal\": false,\n  \"tone_hint\": \"共情+转场+拉回流程\",\n  \"prefix\": \"已经有安排说明您对孩子学习很上心，这挺好的。\",\n  \"suffix_question\": \"孩子现在学习情况怎么样？\",\n  \"style_notes\": \"语气自然，先共情再拉回流程\"\n}"
+              }
+            },
+            "material_stats": {
+              "professional_materials": 220,
+              "flow_materials": 65,
+              "flow_rules": 14
+            }
+          }
+        },
+        {
+          "role": "user",
+          "text": "但是孩子小学六年级语文效果一般"
+        },
+        {
+          "role": "assistant",
+          "text": "理解您的担心，确实孩子语文成绩不理想，家长肯定很着急。 小学6年级是语文学习的关键收官阶段，核心聚焦于阅读理解深度提升与小升初作文实战。 这一阶段的学习不仅是对小学知识的系统梳理，更是为初中语文的抽象思维与复杂文本阅读打下坚实基础。 您看咱们先安排一次试听课，让孩子感受下我们的教学方式，也帮孩子找到具体的问题点，您觉得怎么样？",
+          "debug": {
+            "active_rules": {
+              "global_objective": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。",
+              "intent_system_prompt": "你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。",
+              "guidance_system_prompt": "你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。",
+              "retrieval_policy": "专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。",
+              "assembly_policy": "最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。",
+              "closing_policy": "只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。"
+            },
+            "slot_extract": {
+              "grade": "小学6年级",
+              "subject": "语文",
+              "wechat": null,
+              "schedule": null
+            },
+            "intent": {
+              "primary_intent": "statement",
+              "objection_label": "怕没效果",
+              "emotion_needed": true,
+              "professional_needed": true,
+              "flow_break": false,
+              "return_to_flow": true,
+              "close_signal": false,
+              "tone_hint": "共情+转场+拉回流程",
+              "style_notes": "语气自然，避免说教，用共情和引导推进目标",
+              "source": "single_llm_call"
+            },
+            "plan": {
+              "node": "流程引导库-讲优势节点",
+              "preferred_flow_tags": [
+                "激发危机感+共情",
+                "分析价值+问题分析",
+                "分析价值+价值塑造+信任背书"
+              ],
+              "missing_goals": [
+                "trial_invited",
+                "wechat_collected"
+              ],
+              "requires_professional": true,
+              "next_goal": "trial_invited",
+              "requires_llm": true
+            },
+            "flow_hits": [
+              {
+                "material_id": "flow-22",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+问题分析",
+                "scene": "激发危机感节点完成后，按“年级+科目”双标签触发",
+                "content": "（三年级+数学）孩子数学差，核心不只是粗心，更重要的是解题思路没掌握，比如应用题不会找数量关系，计算题不会简便方法，越练越抵触，其实只要找对方法，针对性练习，很快就能提升。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-23",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+问题分析",
+                "scene": "激发危机感节点完成后，按“年级+科目”双标签触发",
+                "content": "（初二+英语）孩子英语完形差，除了词汇语境运用不足，还有语法知识点不扎实，比如时态、从句不会用，导致上下文衔接不上，做题总出错，只要针对性补语法、练语境，就能明显改善。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-24",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+价值塑造+信任背书",
+                "scene": "分析价值+问题分析触发后，按“年级+科目”双标签触发",
+                "content": "（三年级+数学）针对孩子数学解题思路不清晰、粗心的问题，我们海淀的数学老师，都是带过多年小学毕业班的一线老师，会专门教孩子解题技巧，比如应用题找数量关系、计算题简便方法，一道题拆成基础知识点，孩子能快速掌握；课后还有专属助教，盯着孩子练题、批改作业，及时纠正错误，确保孩子能真正学会。我们也是海淀教委认证的白名单机构，办学20多年，很多三年级孩子跟着老师学1-2个月，数学成绩都能提升10-20分，家长反馈都很好。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-25",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+价值塑造+信任背书",
+                "scene": "分析价值+问题分析触发后，按“年级+科目”双标签触发",
+                "content": "（初二+英语）针对孩子英语完形的词汇语境运用和语法薄弱问题，我们的海淀英语老师，擅长拆解完形考点，教孩子如何结合上下文猜词、运用语法知识点，还会搭配专属练习题，针对性强化；同时会帮孩子梳理词汇、语法体系，夯实基础。我们是海淀白名单机构，所有老师都是一线在职老师，带过多年初二、初三毕业班，很多孩子学完完形正确率能提升30%以上。",
+                "score": 5.0
+              }
+            ],
+            "professional_hits": [
+              {
+                "material_id": "pain-7",
+                "source_file": "素材库-年级-学科痛点1.0版本.xlsx",
+                "category": "pain_point",
+                "title": "小学6年级-语文",
+                "scene": "年级学科痛点",
+                "content": "小学6年级是语文学习的关键收官阶段，核心聚焦于阅读理解深度提升与小升初作文实战。这一阶段的学习不仅是对小学知识的系统梳理，更是为初中语文的抽象思维与复杂文本阅读打下坚实基础。据统计，多数学生在概括文章主旨、赏析表达手法及审题立意、结构布局上易丢分，原因在于缺乏系统的文本分析方法与写作逻辑训练。我们北文教育通过针对性的精读引导与模块化作文教学，帮助孩子掌握高效的阅读解题技巧，构建清晰的写作框架，同时注重文学素养的积累，让孩子从容应对小升初选拔，实现平稳过渡。",
+                "score": 15.0
+              },
+              {
+                "material_id": "objection-6",
+                "source_file": "异议答题库(1).xlsx",
+                "category": "objection",
+                "title": "异议+怕没效果_异议轻处理+拉回主线",
+                "scene": "家长担心辅导没效果，浪费钱",
+                "content": "理解您的顾虑，毕竟给孩子报辅导，效果才是最重要的，咱们全部是海淀一线老师授课，学校是20多年的老学校，每年都见证过各种类型和问题的学生，教育孩子和帮助提高成绩，我们更专业，很多孩子学1-2个月就有明显提升，咱先通过试听课感受一下，也顺便帮孩子精准找到薄弱点。找对问题，找对老师，就很快能解决问题。。",
+                "score": 11.5
+              },
+              {
+                "material_id": "qa-57",
+                "source_file": "问答知识库1.0版.xlsx",
+                "category": "qa",
+                "title": "孩子参加过很多辅导，一点效果也没有，成绩还是上不去",
+                "scene": "家长因孩子多次辅导无效而失去信心，先共情家长的付出，再分析辅导无效的核心原因，介绍机构的核心提分优势，引导提供孩子具体情况进行分析",
+                "content": "那真的太可惜了，既浪费了孩子的宝贵时间，也浪费了您的精力。其实孩子补了没效果，核心原因就是没找对辅导形式和老师，就像中医看病，找不对病因，吃再多药都没用。我先了解下，孩子之前上的是班课还是一对一？是哪个机构的老师？其实辅导的关键就两点：一是老师能精准找到孩子的问题根源，针对性教学；二是教学过程能全程把控，课后有人盯孩子的知识落实。我们的海淀一线老师，带毕业班多年，一眼就能找到孩子的提分突破口，而且有专门的助教、班主任全程盯孩子的学习落实，当天学的内容当天过关，绝对不会让孩子白学。您跟我说下孩子现在的情况，几年级？哪科成绩差？我帮孩子分析下问题到底在哪。",
+                "score": 11.0
+              },
+              {
+                "material_id": "qa-97",
+                "source_file": "问答知识库1.0版.xlsx",
+                "category": "qa",
+                "title": "孩子成绩掉得厉害 / 某科特别薄弱怎么办？",
+                "scene": "家长表达明显成绩下滑、某科薄弱，需要专业分析并说明老师匹配",
+                "content": "这种情况不能只看分数表面，关键是先判断孩子到底是基础漏洞、方法问题还是状态问题。我们这边会先按孩子的年级和学科做判断，再匹配更合适的老师和试听方向，先把问题看准，再决定怎么提分，这样才不会越补越乱。",
+                "score": 10.5
+              }
+            ],
+            "segments": {
+              "guidance_prefix": "理解您的担心，确实孩子语文成绩不理想，家长肯定很着急。",
+              "professional": "小学6年级是语文学习的关键收官阶段，核心聚焦于阅读理解深度提升与小升初作文实战。这一阶段的学习不仅是对小学知识的系统梳理，更是为初中语文的抽象思维与复杂文本阅读打下坚实基础。",
+              "guidance_suffix": "您看咱们先安排一次试听课，让孩子感受下我们的教学方式，也帮孩子找到具体的问题点，您觉得怎么样？",
+              "final_reply": "理解您的担心，确实孩子语文成绩不理想，家长肯定很着急。 小学6年级是语文学习的关键收官阶段，核心聚焦于阅读理解深度提升与小升初作文实战。 这一阶段的学习不仅是对小学知识的系统梳理，更是为初中语文的抽象思维与复杂文本阅读打下坚实基础。 您看咱们先安排一次试听课，让孩子感受下我们的教学方式，也帮孩子找到具体的问题点，您觉得怎么样？"
+            },
+            "llm_calls": {
+              "combined": {
+                "stage": "combined_intent_guidance",
+                "model": "qwen-turbo",
+                "request": [
+                  {
+                    "role": "system",
+                    "content": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。\n你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。\n你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。\n专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。\n最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。\n只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。\n只输出一个 JSON，字段必须包含：primary_intent, objection_label, emotion_needed, professional_needed, flow_break, return_to_flow,close_signal, tone_hint, prefix, suffix_question, style_notes。要求：前缀只做共情和转场，不重复专业正文；后缀只做拉回目标或礼貌收尾；语气像真人电话销售，不要空话，不要复读。"
+                  },
+                  {
+                    "role": "user",
+                    "content": "{\"latest_user_message\": \"但是孩子小学六年级语文效果一般\", \"recent_history\": [{\"role\": \"assistant\", \"content\": \"1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？\"}, {\"role\": \"user\", \"content\": \"我们已经在补课了\"}, {\"role\": \"assistant\", \"content\": \"已经有安排说明您对孩子学习很上心，这挺好的。 孩子现在学习情况怎么样？\"}, {\"role\": \"user\", \"content\": \"但是孩子小学六年级语文效果一般\"}], \"known_slots\": {\"grade\": \"小学6年级\", \"subject\": \"语文\", \"wechat_contact\": null, \"schedule_preference\": null, \"trial_invited\": false}, \"missing_goals\": [\"trial_invited\", \"wechat_collected\"], \"provisional_intent\": {\"primary_intent\": \"statement\", \"objection_label\": null, \"professional_topics\": [\"成绩\", \"提分\", \"薄弱\", \"效果\", \"语文\"], \"fast_case\": null, \"close_signal\": false, \"question_like\": false, \"needs_professional_answer\": true}, \"plan\": {\"node\": \"流程引导库-讲优势节点\", \"preferred_flow_tags\": [\"激发危机感+共情\", \"分析价值+问题分析\", \"分析价值+价值塑造+信任背书\"], \"missing_goals\": [\"trial_invited\", \"wechat_collected\"], \"requires_professional\": true, \"next_goal\": \"trial_invited\"}, \"flow_reference\": [\"（三年级+数学）孩子数学差，核心不只是粗心，更重要的是解题思路没掌握，比如应用题不会找数量关系，计算题不会简便方法，越练越抵触，其实只要找对方法，针对性练习，很快就能提升。\", \"（初二+英语）孩子英语完形差，除了词汇语境运用不足，还有语法知识点不扎实，比如时态、从句不会用，导致上下文衔接不上，做题总出错，只要针对性补语法、练语境，就能明显改善。\", \"（三年级+数学）针对孩子数学解题思路不清晰、粗心的问题，我们海淀的数学老师，都是带过多年小学毕业班的一线老师，会专门教孩子解题技巧，比如应用题找数量关系、计算题简便方法，一道题拆成基础知识点，孩子能快速掌握；课后还有专属助教，盯着孩子练题、批改作业，及时纠正错误，确保孩子能真正学会。我们也是海淀教委认证的白名单机构，办学20多年，很多三年级孩子跟着老师学1-2个月，数学成绩都能提升10-20分，家长反馈都很好。\"], \"professional_reference\": [{\"title\": \"小学6年级-语文\", \"category\": \"pain_point\", \"content\": \"小学6年级是语文学习的关键收官阶段，核心聚焦于阅读理解深度提升与小升初作文实战。\"}, {\"title\": \"异议+怕没效果_异议轻处理+拉回主线\", \"category\": \"objection\", \"content\": \"理解您的顾虑，毕竟给孩子报辅导，效果才是最重要的，咱们全部是海淀一线老师授课，学校是20多年的老学校，每年都见证过各种类型和问题的学生，教育孩子和帮助提高成绩，我们更专业，很多孩子学1-2个月就有明显提升，咱先通过试听课感受一下，也顺便帮孩子精准找到薄弱点。\"}, {\"title\": \"孩子参加过很多辅导，一点效果也没有，成绩还是上不去\", \"category\": \"qa\", \"content\": \"那真的太可惜了，既浪费了孩子的宝贵时间，也浪费了您的精力。\"}]}"
+                  }
+                ],
+                "response_text": "{\n  \"primary_intent\": \"statement\",\n  \"objection_label\": \"怕没效果\",\n  \"emotion_needed\": true,\n  \"professional_needed\": true,\n  \"flow_break\": false,\n  \"return_to_flow\": true,\n  \"close_signal\": false,\n  \"tone_hint\": \"共情+转场+拉回流程\",\n  \"prefix\": \"理解您的担心，确实孩子语文成绩不理想，家长肯定很着急。\",\n  \"suffix_question\": \"您看咱们先安排一次试听课，让孩子感受下我们的教学方式，也帮孩子找到具体的问题点，您觉得怎么样？\",\n  \"style_notes\": \"语气自然，避免说教，用共情和引导推进目标\"\n}"
+              }
+            },
+            "material_stats": {
+              "professional_materials": 220,
+              "flow_materials": 65,
+              "flow_rules": 14
+            }
+          }
+        },
+        {
+          "role": "user",
+          "text": "加我微信 wxmath2026"
+        },
+        {
+          "role": "assistant",
+          "text": "行，联系方式我先给您记上。 您这边还有别的问题吗？",
+          "debug": {
+            "active_rules": {
+              "global_objective": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。",
+              "intent_system_prompt": "你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。",
+              "guidance_system_prompt": "你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。",
+              "retrieval_policy": "专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。",
+              "assembly_policy": "最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。",
+              "closing_policy": "只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。"
+            },
+            "slot_extract": {
+              "grade": null,
+              "subject": null,
+              "wechat": "wxmath2026",
+              "schedule": null
+            },
+            "intent": {
+              "primary_intent": "slot_only",
+              "objection_label": null,
+              "emotion_needed": false,
+              "professional_needed": false,
+              "flow_break": false,
+              "return_to_flow": true,
+              "close_signal": false,
+              "tone_hint": "local_fast_path",
+              "source": "local_fast_path"
+            },
+            "plan": {
+              "node": "流程引导库-邀试听节点",
+              "preferred_flow_tags": [
+                "礼貌收尾+确认完成"
+              ],
+              "missing_goals": [],
+              "requires_professional": false,
+              "next_goal": "polite_close",
+              "requires_llm": false
+            },
+            "flow_hits": [
+              {
+                "material_id": "flow-58",
+                "node": "流程引导库-邀试听节点",
+                "tag": "礼貌收尾+确认完成",
+                "scene": "已完成加微、学科、年级和试听推进，需要礼貌收尾",
+                "content": "好的，那我这边就按刚才确认的信息给您安排，稍后微信上和您对接。您这边如果暂时没有别的问题，我就先不继续打扰您了。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-26",
+                "node": "流程引导库-邀试听节点",
+                "tag": "邀约加微+试听价值",
+                "scene": "分析价值节点完成后，按“年级+科目”双标签触发",
+                "content": "（三年级+数学）针对孩子数学解题思路不清晰、粗心的问题，我们可以安排一节免费的一对一试听课，海淀的老师会专门给孩子做学情分析，精准找到孩子的薄弱点，还会教孩子1-2个实用的解题技巧，另外给孩子定制专属的短期提分方案，让您和孩子都能清楚知道该怎么补。",
+                "score": 1.0
+              },
+              {
+                "material_id": "flow-27",
+                "node": "流程引导库-邀试听节点",
+                "tag": "邀约加微+试听价值",
+                "scene": "分析价值节点完成后，按“年级+科目”双标签触发",
+                "content": "（初二+英语）针对孩子英语完形差、语法薄弱的问题，我们安排一节免费的一对一试听课，海淀的英语老师会帮孩子拆解完形考点，教孩子上下文猜词、语法运用的方法，还会给孩子做词汇、语法的基础检测，让孩子当场就能掌握一些实用技巧。",
+                "score": 1.0
+              },
+              {
+                "material_id": "flow-28",
+                "node": "流程引导库-邀试听节点",
+                "tag": "邀约加微+选择式邀约",
+                "scene": "邀约加微+试听价值触发后，优先触发",
+                "content": "孩子这周周六还是周日有空呀？",
+                "score": 1.0
+              }
+            ],
+            "professional_hits": [],
+            "segments": {
+              "guidance_prefix": "行，联系方式我先给您记上。",
+              "professional": "",
+              "guidance_suffix": "您这边还有别的问题吗？",
+              "final_reply": "行，联系方式我先给您记上。 您这边还有别的问题吗？"
+            },
+            "llm_calls": {},
+            "material_stats": {
+              "professional_materials": 220,
+              "flow_materials": 65,
+              "flow_rules": 14
+            }
+          }
+        }
+      ],
+      "state": {
+        "history": [
+          {
+            "role": "assistant",
+            "content": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？"
+          },
+          {
+            "role": "user",
+            "content": "我们已经在补课了"
+          },
+          {
+            "role": "assistant",
+            "content": "已经有安排说明您对孩子学习很上心，这挺好的。 孩子现在学习情况怎么样？"
+          },
+          {
+            "role": "user",
+            "content": "但是孩子小学六年级语文效果一般"
+          },
+          {
+            "role": "assistant",
+            "content": "理解您的担心，确实孩子语文成绩不理想，家长肯定很着急。 小学6年级是语文学习的关键收官阶段，核心聚焦于阅读理解深度提升与小升初作文实战。 这一阶段的学习不仅是对小学知识的系统梳理，更是为初中语文的抽象思维与复杂文本阅读打下坚实基础。 您看咱们先安排一次试听课，让孩子感受下我们的教学方式，也帮孩子找到具体的问题点，您觉得怎么样？"
+          },
+          {
+            "role": "user",
+            "content": "加我微信 wxmath2026"
+          },
+          {
+            "role": "assistant",
+            "content": "行，联系方式我先给您记上。 您这边还有别的问题吗？"
+          }
+        ],
+        "current_node": "流程引导库-邀试听节点",
+        "turn_index": 3,
+        "grade": "小学6年级",
+        "subject": "语文",
+        "wechat_contact": "wxmath2026",
+        "schedule_preference": null,
+        "trial_invited": true,
+        "close_prompted": true,
+        "ended": false,
+        "stop_requested": false,
+        "material_gap": false,
+        "last_intent": {
+          "primary_intent": "slot_only",
+          "objection_label": null,
+          "emotion_needed": false,
+          "professional_needed": false,
+          "flow_break": false,
+          "return_to_flow": true,
+          "close_signal": false,
+          "tone_hint": "local_fast_path",
+          "source": "local_fast_path"
+        },
+        "recent_professional_ids": [
+          "objection-76",
+          "pain-7"
+        ]
+      }
+    },
+    {
+      "scenario_id": "busy_006",
+      "category": "busy",
+      "failed_checks": [
+        {
+          "name": "busy_short_and_clear",
+          "passed": false,
+          "detail": "家长忙时回复过长"
+        }
+      ],
+      "conversation": [
+        {
+          "role": "assistant",
+          "text": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？",
+          "debug": {
+            "active_rules": {
+              "global_objective": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。",
+              "intent_system_prompt": "你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。",
+              "guidance_system_prompt": "你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。",
+              "retrieval_policy": "专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。",
+              "assembly_policy": "最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。",
+              "closing_policy": "只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。"
+            },
+            "slot_extract": {},
+            "intent": {
+              "primary_intent": "opening",
+              "source": "local_fast_path"
+            },
+            "plan": {
+              "node": "流程引导库-开场节点",
+              "missing_goals": [
+                "grade_collected",
+                "subject_collected",
+                "trial_invited",
+                "wechat_collected"
+              ],
+              "requires_llm": false
+            },
+            "flow_hits": [
+              {
+                "material_id": "flow-1",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-2",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "2. 喂 家长您好，我们是人大附第二课堂，专注初高中一对一学科辅导，想问下孩子有没有哪科需要提升的呀？",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-3",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "3. 喂 您好，家长您好，我们重点学校一线在职老师，专做一对一提分的，老师都是海淀六小强，像人大附，清华附等一线重点学校的老师，提分有把握，请问孩子有没有哪些科目需要提升的？",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-4",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "4. 喂  家长您好，我们是人大附第二课堂的，专做中高考一对一学科规划提升的，全部都是海淀一线在职老师，能快速提高100-120分，孩子现在学习情况怎么样？",
+                "score": 5.0
+              }
+            ],
+            "professional_hits": [],
+            "segments": {
+              "guidance_prefix": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？",
+              "professional": "",
+              "guidance_suffix": "",
+              "final_reply": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？"
+            },
+            "llm_calls": {},
+            "material_stats": {
+              "professional_materials": 220,
+              "flow_materials": 65,
+              "flow_rules": 14
+            }
+          }
+        },
+        {
+          "role": "user",
+          "text": "我现在很忙，别讲太多"
+        },
+        {
+          "role": "assistant",
+          "text": "理解，您现在忙，我就抓关键、说重点。 我特别懂，家长平时都忙，咱们的试听课和辅导课都可以灵活安排，周末、晚上都能上，不耽误您和孩子的时间，孩子现在学习情况怎么样？",
+          "debug": {
+            "active_rules": {
+              "global_objective": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。",
+              "intent_system_prompt": "你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。",
+              "guidance_system_prompt": "你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。",
+              "retrieval_policy": "专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。",
+              "assembly_policy": "最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。",
+              "closing_policy": "只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。"
+            },
+            "slot_extract": {
+              "grade": null,
+              "subject": null,
+              "wechat": null,
+              "schedule": null
+            },
+            "intent": {
+              "primary_intent": "objection",
+              "objection_label": "没时间",
+              "emotion_needed": true,
+              "professional_needed": true,
+              "flow_break": false,
+              "return_to_flow": true,
+              "close_signal": false,
+              "tone_hint": "理解且温和",
+              "style_notes": "语气自然，避免说教感，先共情再拉回流程",
+              "source": "single_llm_call"
+            },
+            "plan": {
+              "node": "流程引导库-讲优势节点",
+              "preferred_flow_tags": [
+                "激发危机感+共情",
+                "分析价值+问题分析",
+                "分析价值+价值塑造+信任背书"
+              ],
+              "missing_goals": [
+                "grade_collected",
+                "subject_collected",
+                "trial_invited",
+                "wechat_collected"
+              ],
+              "requires_professional": true,
+              "next_goal": "grade_collected",
+              "requires_llm": true
+            },
+            "flow_hits": [
+              {
+                "material_id": "flow-22",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+问题分析",
+                "scene": "激发危机感节点完成后，按“年级+科目”双标签触发",
+                "content": "（三年级+数学）孩子数学差，核心不只是粗心，更重要的是解题思路没掌握，比如应用题不会找数量关系，计算题不会简便方法，越练越抵触，其实只要找对方法，针对性练习，很快就能提升。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-23",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+问题分析",
+                "scene": "激发危机感节点完成后，按“年级+科目”双标签触发",
+                "content": "（初二+英语）孩子英语完形差，除了词汇语境运用不足，还有语法知识点不扎实，比如时态、从句不会用，导致上下文衔接不上，做题总出错，只要针对性补语法、练语境，就能明显改善。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-24",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+价值塑造+信任背书",
+                "scene": "分析价值+问题分析触发后，按“年级+科目”双标签触发",
+                "content": "（三年级+数学）针对孩子数学解题思路不清晰、粗心的问题，我们海淀的数学老师，都是带过多年小学毕业班的一线老师，会专门教孩子解题技巧，比如应用题找数量关系、计算题简便方法，一道题拆成基础知识点，孩子能快速掌握；课后还有专属助教，盯着孩子练题、批改作业，及时纠正错误，确保孩子能真正学会。我们也是海淀教委认证的白名单机构，办学20多年，很多三年级孩子跟着老师学1-2个月，数学成绩都能提升10-20分，家长反馈都很好。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-25",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+价值塑造+信任背书",
+                "scene": "分析价值+问题分析触发后，按“年级+科目”双标签触发",
+                "content": "（初二+英语）针对孩子英语完形的词汇语境运用和语法薄弱问题，我们的海淀英语老师，擅长拆解完形考点，教孩子如何结合上下文猜词、运用语法知识点，还会搭配专属练习题，针对性强化；同时会帮孩子梳理词汇、语法体系，夯实基础。我们是海淀白名单机构，所有老师都是一线在职老师，带过多年初二、初三毕业班，很多孩子学完完形正确率能提升30%以上。",
+                "score": 5.0
+              }
+            ],
+            "professional_hits": [
+              {
+                "material_id": "objection-1",
+                "source_file": "异议答题库(1).xlsx",
+                "category": "objection",
+                "title": "异议+没时间_异议轻处理+拉回主线",
+                "scene": "家长说自己忙，没时间陪同",
+                "content": "我特别懂，家长平时都忙，咱们的试听课和辅导课都可以灵活安排，周末、晚上都能上，不耽误您和孩子的时间，孩子现在学习情况怎么样？哪个年级呢？",
+                "score": 8.5
+              },
+              {
+                "material_id": "objection-2",
+                "source_file": "异议答题库(1).xlsx",
+                "category": "objection",
+                "title": "异议+没时间_异议轻处理+拉回主线",
+                "scene": "家长说孩子没时间上课",
+                "content": "孩子的学习是怎么安排的呢（通过了解孩子的课程安排，帮家长做决定） 时间就像海绵里的水，只要挤挤肯定是 有的，",
+                "score": 8.5
+              },
+              {
+                "material_id": "objection-3",
+                "source_file": "异议答题库(1).xlsx",
+                "category": "objection",
+                "title": "异议+没时间_异议轻处理+拉回主线",
+                "scene": "家长含糊说“没时间”无具体说明",
+                "content": "是呀，您平时比较忙，孩子的学习问题更应当重视啊，提前给孩子规划学习，再忙也得要提前规划， 咱们的辅导课支持线上线下灵活切换，不用特意跑线下，碎片化时间就能帮孩子补弱，咱先简单说说孩子哪科学得相对吃力？",
+                "score": 8.5
+              },
+              {
+                "material_id": "objection-37",
+                "source_file": "异议答题库(1).xlsx",
+                "category": "objection",
+                "title": "异议+家长没时间盯课后_异议轻处理+拉回主线",
+                "scene": "家长表示自己没时间监督孩子课后复习、写作业，报课也没用",
+                "content": "您的难处我太懂了，现在家长都忙，根本没精力盯孩子学习！咱们有专门班主任师全程监督学习，课后会提醒孩子写作业、检查作业，还会把孩子的学习情况每天反馈给您，不用您多费心。孩子现在课后作业是不是基本没人管呀？",
+                "score": 6.0
+              }
+            ],
+            "segments": {
+              "guidance_prefix": "理解，您现在忙，我就抓关键、说重点。",
+              "professional": "我特别懂，家长平时都忙，咱们的试听课和辅导课都可以灵活安排，周末、晚上都能上，不耽误您和孩子的时间，孩子现在学习情况怎么样？",
+              "guidance_suffix": "孩子现在学习情况怎么样？",
+              "final_reply": "理解，您现在忙，我就抓关键、说重点。 我特别懂，家长平时都忙，咱们的试听课和辅导课都可以灵活安排，周末、晚上都能上，不耽误您和孩子的时间，孩子现在学习情况怎么样？"
+            },
+            "llm_calls": {
+              "combined": {
+                "stage": "combined_intent_guidance",
+                "model": "qwen-turbo",
+                "request": [
+                  {
+                    "role": "system",
+                    "content": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。\n你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。\n你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。\n专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。\n最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。\n只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。\n只输出一个 JSON，字段必须包含：primary_intent, objection_label, emotion_needed, professional_needed, flow_break, return_to_flow,close_signal, tone_hint, prefix, suffix_question, style_notes。要求：前缀只做共情和转场，不重复专业正文；后缀只做拉回目标或礼貌收尾；语气像真人电话销售，不要空话，不要复读。"
+                  },
+                  {
+                    "role": "user",
+                    "content": "{\"latest_user_message\": \"我现在很忙，别讲太多\", \"recent_history\": [{\"role\": \"assistant\", \"content\": \"1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？\"}, {\"role\": \"user\", \"content\": \"我现在很忙，别讲太多\"}], \"known_slots\": {\"grade\": null, \"subject\": null, \"wechat_contact\": null, \"schedule_preference\": null, \"trial_invited\": false}, \"missing_goals\": [\"grade_collected\", \"subject_collected\", \"trial_invited\", \"wechat_collected\"], \"provisional_intent\": {\"primary_intent\": \"objection\", \"objection_label\": \"没时间\", \"professional_topics\": [], \"fast_case\": null, \"close_signal\": false, \"question_like\": false, \"needs_professional_answer\": true}, \"plan\": {\"node\": \"流程引导库-讲优势节点\", \"preferred_flow_tags\": [\"激发危机感+共情\", \"分析价值+问题分析\", \"分析价值+价值塑造+信任背书\"], \"missing_goals\": [\"grade_collected\", \"subject_collected\", \"trial_invited\", \"wechat_collected\"], \"requires_professional\": true, \"next_goal\": \"grade_collected\"}, \"flow_reference\": [\"（三年级+数学）孩子数学差，核心不只是粗心，更重要的是解题思路没掌握，比如应用题不会找数量关系，计算题不会简便方法，越练越抵触，其实只要找对方法，针对性练习，很快就能提升。\", \"（初二+英语）孩子英语完形差，除了词汇语境运用不足，还有语法知识点不扎实，比如时态、从句不会用，导致上下文衔接不上，做题总出错，只要针对性补语法、练语境，就能明显改善。\", \"（三年级+数学）针对孩子数学解题思路不清晰、粗心的问题，我们海淀的数学老师，都是带过多年小学毕业班的一线老师，会专门教孩子解题技巧，比如应用题找数量关系、计算题简便方法，一道题拆成基础知识点，孩子能快速掌握；课后还有专属助教，盯着孩子练题、批改作业，及时纠正错误，确保孩子能真正学会。我们也是海淀教委认证的白名单机构，办学20多年，很多三年级孩子跟着老师学1-2个月，数学成绩都能提升10-20分，家长反馈都很好。\"], \"professional_reference\": [{\"title\": \"异议+没时间_异议轻处理+拉回主线\", \"category\": \"objection\", \"content\": \"我特别懂，家长平时都忙，咱们的试听课和辅导课都可以灵活安排，周末、晚上都能上，不耽误您和孩子的时间，孩子现在学习情况怎么样？\"}, {\"title\": \"异议+没时间_异议轻处理+拉回主线\", \"category\": \"objection\", \"content\": \"孩子的学习是怎么安排的呢（通过了解孩子的课程安排，帮家长做决定） 时间就像海绵里的水，只要挤挤肯定是 有的，\"}, {\"title\": \"异议+没时间_异议轻处理+拉回主线\", \"category\": \"objection\", \"content\": \"是呀，您平时比较忙，孩子的学习问题更应当重视啊，提前给孩子规划学习，再忙也得要提前规划， 咱们的辅导课支持线上线下灵活切换，不用特意跑线下，碎片化时间就能帮孩子补弱，咱先简单说说孩子哪科学得相对吃力？\"}]}"
+                  }
+                ],
+                "response_text": "{\n  \"primary_intent\": \"objection\",\n  \"objection_label\": \"没时间\",\n  \"emotion_needed\": true,\n  \"professional_needed\": true,\n  \"flow_break\": false,\n  \"return_to_flow\": true,\n  \"close_signal\": false,\n  \"tone_hint\": \"理解且温和\",\n  \"prefix\": \"我特别懂，家长平时都忙，咱们的试听课和辅导课都可以灵活安排，周末、晚上都能上，不耽误您和孩子的时间，\",\n  \"suffix_question\": \"孩子现在学习情况怎么样？\",\n  \"style_notes\": \"语气自然，避免说教感，先共情再拉回流程\"\n}"
+              }
+            },
+            "material_stats": {
+              "professional_materials": 220,
+              "flow_materials": 65,
+              "flow_rules": 14
+            }
+          }
+        },
+        {
+          "role": "user",
+          "text": "那你快点说，孩子高一语文最近不太稳"
+        },
+        {
+          "role": "assistant",
+          "text": "理解您现在很着急，孩子高一语文不稳定确实会影响整体成绩。 在高中语文学习中，不考课内的，主要都是课外的，考察孩子的实际应用能力，语文主要包括：语文基础知识的掌握和应用（约15分）以选择题的形式出现，主要考察字音、字形、近义词、对联等，古诗文阅读（约36分）主要以简答题的形式出现，考察从不同角度和层面对文本内容或形式的体察、阐发与评价，现代文阅读（约27分）会以选择题和简答题的形式出现，主要有主观。 您看现在方便加个微信，我给您发些针对性的提分建议和试听安排吗？",
+          "debug": {
+            "active_rules": {
+              "global_objective": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。",
+              "intent_system_prompt": "你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。",
+              "guidance_system_prompt": "你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。",
+              "retrieval_policy": "专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。",
+              "assembly_policy": "最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。",
+              "closing_policy": "只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。"
+            },
+            "slot_extract": {
+              "grade": "高一",
+              "subject": "语文",
+              "wechat": null,
+              "schedule": null
+            },
+            "intent": {
+              "primary_intent": "statement",
+              "objection_label": null,
+              "emotion_needed": true,
+              "professional_needed": true,
+              "flow_break": false,
+              "return_to_flow": true,
+              "close_signal": false,
+              "tone_hint": "共情+引导",
+              "style_notes": "语气自然、有共情，不编造信息，引导到微信号收集",
+              "source": "single_llm_call"
+            },
+            "plan": {
+              "node": "流程引导库-讲优势节点",
+              "preferred_flow_tags": [
+                "激发危机感+共情",
+                "分析价值+问题分析",
+                "分析价值+价值塑造+信任背书"
+              ],
+              "missing_goals": [
+                "wechat_collected"
+              ],
+              "requires_professional": true,
+              "next_goal": "wechat_collected",
+              "requires_llm": true
+            },
+            "flow_hits": [
+              {
+                "material_id": "flow-22",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+问题分析",
+                "scene": "激发危机感节点完成后，按“年级+科目”双标签触发",
+                "content": "（三年级+数学）孩子数学差，核心不只是粗心，更重要的是解题思路没掌握，比如应用题不会找数量关系，计算题不会简便方法，越练越抵触，其实只要找对方法，针对性练习，很快就能提升。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-23",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+问题分析",
+                "scene": "激发危机感节点完成后，按“年级+科目”双标签触发",
+                "content": "（初二+英语）孩子英语完形差，除了词汇语境运用不足，还有语法知识点不扎实，比如时态、从句不会用，导致上下文衔接不上，做题总出错，只要针对性补语法、练语境，就能明显改善。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-24",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+价值塑造+信任背书",
+                "scene": "分析价值+问题分析触发后，按“年级+科目”双标签触发",
+                "content": "（三年级+数学）针对孩子数学解题思路不清晰、粗心的问题，我们海淀的数学老师，都是带过多年小学毕业班的一线老师，会专门教孩子解题技巧，比如应用题找数量关系、计算题简便方法，一道题拆成基础知识点，孩子能快速掌握；课后还有专属助教，盯着孩子练题、批改作业，及时纠正错误，确保孩子能真正学会。我们也是海淀教委认证的白名单机构，办学20多年，很多三年级孩子跟着老师学1-2个月，数学成绩都能提升10-20分，家长反馈都很好。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-25",
+                "node": "流程引导库-讲优势节点",
+                "tag": "分析价值+价值塑造+信任背书",
+                "scene": "分析价值+问题分析触发后，按“年级+科目”双标签触发",
+                "content": "（初二+英语）针对孩子英语完形的词汇语境运用和语法薄弱问题，我们的海淀英语老师，擅长拆解完形考点，教孩子如何结合上下文猜词、运用语法知识点，还会搭配专属练习题，针对性强化；同时会帮孩子梳理词汇、语法体系，夯实基础。我们是海淀白名单机构，所有老师都是一线在职老师，带过多年初二、初三毕业班，很多孩子学完完形正确率能提升30%以上。",
+                "score": 5.0
+              }
+            ],
+            "professional_hits": [
+              {
+                "material_id": "pain-22",
+                "source_file": "素材库-年级-学科痛点1.0版本.xlsx",
+                "category": "pain_point",
+                "title": "高一-语文",
+                "scene": "年级学科痛点",
+                "content": "在高中语文学习中，不考课内的，主要都是课外的，考察孩子的实际应用能力，语文主要包括：语文基础知识的掌握和应用（约15分）以选择题的形式出现，主要考察字音、字形、近义词、对联等，古诗文阅读（约36分）主要以简答题的形式出现，考察从不同角度和层面对文本内容或形式的体察、阐发与评价，现代文阅读（约27分）会以选择题和简答题的形式出现，主要有主观表达题、简答题、文意理解题;阅读延伸（约12分）主要考察从不同角度和次考察与评价，写作（50分）一定要符合题目要求，内容充实，中心明确，表达顺畅结构完成，提倡写思想深刻，选材新颖，想象力丰富，有文采的文章，微写作（10分），主要考察学生应用精炼的语言描述场景，事物，表达观点，抒发情感的能力。在未来高考我们的语文越来越重要，分值越来越高，所以您从现在开始一定要让孩子抓紧学习。",
+                "score": 17.5
+              },
+              {
+                "material_id": "qa-97",
+                "source_file": "问答知识库1.0版.xlsx",
+                "category": "qa",
+                "title": "孩子成绩掉得厉害 / 某科特别薄弱怎么办？",
+                "scene": "家长表达明显成绩下滑、某科薄弱，需要专业分析并说明老师匹配",
+                "content": "这种情况不能只看分数表面，关键是先判断孩子到底是基础漏洞、方法问题还是状态问题。我们这边会先按孩子的年级和学科做判断，再匹配更合适的老师和试听方向，先把问题看准，再决定怎么提分，这样才不会越补越乱。",
+                "score": 10.5
+              },
+              {
+                "material_id": "qa-30",
+                "source_file": "问答知识库1.0版.xlsx",
+                "category": "qa",
+                "title": "中等学生，怎么提分？",
+                "scene": "家长为中等成绩孩子咨询提分方法，突出中等生的提升空间，分析学习痛点，介绍机构针对性的提分策略，拒绝题海战术",
+                "content": "中等分数的孩子是最有提升空间的，努努力就能往上冲，不努力就容易被落下。核心问题是基础知识点掌握得不扎实，学得比较浮，知识的综合运用能力差。我们的海淀老师会先帮孩子精准找到知识漏洞和薄弱环节，针对性讲经典题型，打开孩子的解题思路。而且我们不讲偏题、怪题，只讲中高考的必考点、重难点，课后让孩子练老师反复总结的典型题，不搞题海战术，练一道会一类，只要孩子跟着老师的节奏走，成绩提升会特别明显。",
+                "score": 9.5
+              },
+              {
+                "material_id": "qa-83",
+                "source_file": "问答知识库1.0版.xlsx",
+                "category": "qa",
+                "title": "孩子成绩还行，有必要补吗？",
+                "scene": "家长觉得孩子成绩中等或尚可，不确定是否需要辅导",
+                "content": "成绩还行其实是很值得重视的阶段，因为这个阶段最容易拉开差距。很多孩子表面分数稳定，但一到综合题、压轴题或者难度提升，就会暴露出知识不成体系、方法不够稳定的问题。这个阶段如果及时把薄弱模块补齐，提分效率通常比临近大考再补更高。您可以先说下孩子现在几年级、哪科分数最容易波动，我帮您判断有没有提前规划的必要。",
+                "score": 9.0
+              }
+            ],
+            "segments": {
+              "guidance_prefix": "理解您现在很着急，孩子高一语文不稳定确实会影响整体成绩。",
+              "professional": "在高中语文学习中，不考课内的，主要都是课外的，考察孩子的实际应用能力，语文主要包括：语文基础知识的掌握和应用（约15分）以选择题的形式出现，主要考察字音、字形、近义词、对联等，古诗文阅读（约36分）主要以简答题的形式出现，考察从不同角度和层面对文本内容或形式的体察、阐发与评价，现代文阅读（约27分）会以选择题和简答题的形式出现，主要有主观。",
+              "guidance_suffix": "您看现在方便加个微信，我给您发些针对性的提分建议和试听安排吗？",
+              "final_reply": "理解您现在很着急，孩子高一语文不稳定确实会影响整体成绩。 在高中语文学习中，不考课内的，主要都是课外的，考察孩子的实际应用能力，语文主要包括：语文基础知识的掌握和应用（约15分）以选择题的形式出现，主要考察字音、字形、近义词、对联等，古诗文阅读（约36分）主要以简答题的形式出现，考察从不同角度和层面对文本内容或形式的体察、阐发与评价，现代文阅读（约27分）会以选择题和简答题的形式出现，主要有主观。 您看现在方便加个微信，我给您发些针对性的提分建议和试听安排吗？"
+            },
+            "llm_calls": {
+              "combined": {
+                "stage": "combined_intent_guidance",
+                "model": "qwen-turbo",
+                "request": [
+                  {
+                    "role": "system",
+                    "content": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。\n你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。\n你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。\n专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。\n最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。\n只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。\n只输出一个 JSON，字段必须包含：primary_intent, objection_label, emotion_needed, professional_needed, flow_break, return_to_flow,close_signal, tone_hint, prefix, suffix_question, style_notes。要求：前缀只做共情和转场，不重复专业正文；后缀只做拉回目标或礼貌收尾；语气像真人电话销售，不要空话，不要复读。"
+                  },
+                  {
+                    "role": "user",
+                    "content": "{\"latest_user_message\": \"那你快点说，孩子高一语文最近不太稳\", \"recent_history\": [{\"role\": \"assistant\", \"content\": \"1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？\"}, {\"role\": \"user\", \"content\": \"我现在很忙，别讲太多\"}, {\"role\": \"assistant\", \"content\": \"理解，您现在忙，我就抓关键、说重点。 我特别懂，家长平时都忙，咱们的试听课和辅导课都可以灵活安排，周末、晚上都能上，不耽误您和孩子的时间，孩子现在学习情况怎么样？\"}, {\"role\": \"user\", \"content\": \"那你快点说，孩子高一语文最近不太稳\"}], \"known_slots\": {\"grade\": \"高一\", \"subject\": \"语文\", \"wechat_contact\": null, \"schedule_preference\": null, \"trial_invited\": true}, \"missing_goals\": [\"wechat_collected\"], \"provisional_intent\": {\"primary_intent\": \"statement\", \"objection_label\": null, \"professional_topics\": [\"成绩\", \"提分\", \"薄弱\", \"语文\"], \"fast_case\": null, \"close_signal\": false, \"question_like\": false, \"needs_professional_answer\": true}, \"plan\": {\"node\": \"流程引导库-讲优势节点\", \"preferred_flow_tags\": [\"激发危机感+共情\", \"分析价值+问题分析\", \"分析价值+价值塑造+信任背书\"], \"missing_goals\": [\"wechat_collected\"], \"requires_professional\": true, \"next_goal\": \"wechat_collected\"}, \"flow_reference\": [\"（三年级+数学）孩子数学差，核心不只是粗心，更重要的是解题思路没掌握，比如应用题不会找数量关系，计算题不会简便方法，越练越抵触，其实只要找对方法，针对性练习，很快就能提升。\", \"（初二+英语）孩子英语完形差，除了词汇语境运用不足，还有语法知识点不扎实，比如时态、从句不会用，导致上下文衔接不上，做题总出错，只要针对性补语法、练语境，就能明显改善。\", \"（三年级+数学）针对孩子数学解题思路不清晰、粗心的问题，我们海淀的数学老师，都是带过多年小学毕业班的一线老师，会专门教孩子解题技巧，比如应用题找数量关系、计算题简便方法，一道题拆成基础知识点，孩子能快速掌握；课后还有专属助教，盯着孩子练题、批改作业，及时纠正错误，确保孩子能真正学会。我们也是海淀教委认证的白名单机构，办学20多年，很多三年级孩子跟着老师学1-2个月，数学成绩都能提升10-20分，家长反馈都很好。\"], \"professional_reference\": [{\"title\": \"高一-语文\", \"category\": \"pain_point\", \"content\": \"在高中语文学习中，不考课内的，主要都是课外的，考察孩子的实际应用能力，语文主要包括：语文基础知识的掌握和应用（约15分）以选择题的形式出现，主要考察字音、字形、近义词、对联等，古诗文阅读（约36分）主要以简答题的形式出现，考察从不同角度和层面对文本内容或形式的体察、阐发与评价，现代文阅读（约27分）会以选择题和简答题的形式出现，主要有主观表达题、简答题、文意理解题;阅读延伸（约12分）主要考察从不同角度和次考察与评价，写作（50分）一定要符合题目要求，内容充实，中心明确，表达顺畅结构完成，提倡写思想深刻，选材新颖，想象力丰富，有文采的文章，微写作（10分），主要考察学生应用精炼的语言描述场景，事物，表达观点，抒发情感的能力。\"}, {\"title\": \"孩子成绩掉得厉害 / 某科特别薄弱怎么办？\", \"category\": \"qa\", \"content\": \"这种情况不能只看分数表面，关键是先判断孩子到底是基础漏洞、方法问题还是状态问题。\"}, {\"title\": \"中等学生，怎么提分？\", \"category\": \"qa\", \"content\": \"中等分数的孩子是最有提升空间的，努努力就能往上冲，不努力就容易被落下。\"}]}"
+                  }
+                ],
+                "response_text": "{\n  \"primary_intent\": \"statement\",\n  \"objection_label\": null,\n  \"emotion_needed\": true,\n  \"professional_needed\": true,\n  \"flow_break\": false,\n  \"return_to_flow\": true,\n  \"close_signal\": false,\n  \"tone_hint\": \"共情+引导\",\n  \"prefix\": \"理解您现在很着急，孩子高一语文不稳定确实会影响整体成绩。\",\n  \"suffix_question\": \"您看现在方便加个微信，我给您发些针对性的提分建议和试听安排吗？\",\n  \"style_notes\": \"语气自然、有共情，不编造信息，引导到微信号收集\"\n}"
+              }
+            },
+            "material_stats": {
+              "professional_materials": 220,
+              "flow_materials": 65,
+              "flow_rules": 14
+            }
+          }
+        },
+        {
+          "role": "user",
+          "text": "电话是 13800138000"
+        },
+        {
+          "role": "assistant",
+          "text": "行，联系方式我先给您记上。 您这边还有别的问题吗？",
+          "debug": {
+            "active_rules": {
+              "global_objective": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。",
+              "intent_system_prompt": "你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。",
+              "guidance_system_prompt": "你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。",
+              "retrieval_policy": "专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。",
+              "assembly_policy": "最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。",
+              "closing_policy": "只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。"
+            },
+            "slot_extract": {
+              "grade": null,
+              "subject": null,
+              "wechat": "13800138000",
+              "schedule": null
+            },
+            "intent": {
+              "primary_intent": "slot_only",
+              "objection_label": null,
+              "emotion_needed": false,
+              "professional_needed": false,
+              "flow_break": false,
+              "return_to_flow": true,
+              "close_signal": false,
+              "tone_hint": "local_fast_path",
+              "source": "local_fast_path"
+            },
+            "plan": {
+              "node": "流程引导库-邀试听节点",
+              "preferred_flow_tags": [
+                "礼貌收尾+确认完成"
+              ],
+              "missing_goals": [],
+              "requires_professional": false,
+              "next_goal": "polite_close",
+              "requires_llm": false
+            },
+            "flow_hits": [
+              {
+                "material_id": "flow-58",
+                "node": "流程引导库-邀试听节点",
+                "tag": "礼貌收尾+确认完成",
+                "scene": "已完成加微、学科、年级和试听推进，需要礼貌收尾",
+                "content": "好的，那我这边就按刚才确认的信息给您安排，稍后微信上和您对接。您这边如果暂时没有别的问题，我就先不继续打扰您了。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-26",
+                "node": "流程引导库-邀试听节点",
+                "tag": "邀约加微+试听价值",
+                "scene": "分析价值节点完成后，按“年级+科目”双标签触发",
+                "content": "（三年级+数学）针对孩子数学解题思路不清晰、粗心的问题，我们可以安排一节免费的一对一试听课，海淀的老师会专门给孩子做学情分析，精准找到孩子的薄弱点，还会教孩子1-2个实用的解题技巧，另外给孩子定制专属的短期提分方案，让您和孩子都能清楚知道该怎么补。",
+                "score": 1.0
+              },
+              {
+                "material_id": "flow-27",
+                "node": "流程引导库-邀试听节点",
+                "tag": "邀约加微+试听价值",
+                "scene": "分析价值节点完成后，按“年级+科目”双标签触发",
+                "content": "（初二+英语）针对孩子英语完形差、语法薄弱的问题，我们安排一节免费的一对一试听课，海淀的英语老师会帮孩子拆解完形考点，教孩子上下文猜词、语法运用的方法，还会给孩子做词汇、语法的基础检测，让孩子当场就能掌握一些实用技巧。",
+                "score": 1.0
+              },
+              {
+                "material_id": "flow-28",
+                "node": "流程引导库-邀试听节点",
+                "tag": "邀约加微+选择式邀约",
+                "scene": "邀约加微+试听价值触发后，优先触发",
+                "content": "孩子这周周六还是周日有空呀？",
+                "score": 1.0
+              }
+            ],
+            "professional_hits": [],
+            "segments": {
+              "guidance_prefix": "行，联系方式我先给您记上。",
+              "professional": "",
+              "guidance_suffix": "您这边还有别的问题吗？",
+              "final_reply": "行，联系方式我先给您记上。 您这边还有别的问题吗？"
+            },
+            "llm_calls": {},
+            "material_stats": {
+              "professional_materials": 220,
+              "flow_materials": 65,
+              "flow_rules": 14
+            }
+          }
+        }
+      ],
+      "state": {
+        "history": [
+          {
+            "role": "assistant",
+            "content": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？"
+          },
+          {
+            "role": "user",
+            "content": "我现在很忙，别讲太多"
+          },
+          {
+            "role": "assistant",
+            "content": "理解，您现在忙，我就抓关键、说重点。 我特别懂，家长平时都忙，咱们的试听课和辅导课都可以灵活安排，周末、晚上都能上，不耽误您和孩子的时间，孩子现在学习情况怎么样？"
+          },
+          {
+            "role": "user",
+            "content": "那你快点说，孩子高一语文最近不太稳"
+          },
+          {
+            "role": "assistant",
+            "content": "理解您现在很着急，孩子高一语文不稳定确实会影响整体成绩。 在高中语文学习中，不考课内的，主要都是课外的，考察孩子的实际应用能力，语文主要包括：语文基础知识的掌握和应用（约15分）以选择题的形式出现，主要考察字音、字形、近义词、对联等，古诗文阅读（约36分）主要以简答题的形式出现，考察从不同角度和层面对文本内容或形式的体察、阐发与评价，现代文阅读（约27分）会以选择题和简答题的形式出现，主要有主观。 您看现在方便加个微信，我给您发些针对性的提分建议和试听安排吗？"
+          },
+          {
+            "role": "user",
+            "content": "电话是 13800138000"
+          },
+          {
+            "role": "assistant",
+            "content": "行，联系方式我先给您记上。 您这边还有别的问题吗？"
+          }
+        ],
+        "current_node": "流程引导库-邀试听节点",
+        "turn_index": 3,
+        "grade": "高一",
+        "subject": "语文",
+        "wechat_contact": "13800138000",
+        "schedule_preference": null,
+        "trial_invited": true,
+        "close_prompted": true,
+        "ended": false,
+        "stop_requested": false,
+        "material_gap": false,
+        "last_intent": {
+          "primary_intent": "slot_only",
+          "objection_label": null,
+          "emotion_needed": false,
+          "professional_needed": false,
+          "flow_break": false,
+          "return_to_flow": true,
+          "close_signal": false,
+          "tone_hint": "local_fast_path",
+          "source": "local_fast_path"
+        },
+        "recent_professional_ids": [
+          "objection-1",
+          "pain-22"
+        ]
+      }
+    },
+    {
+      "scenario_id": "web_identity_001",
+      "category": "identity",
+      "failed_checks": [
+        {
+          "name": "identity_later_discover",
+          "passed": false,
+          "detail": "后续没有回到发现需求"
+        }
+      ],
+      "conversation": [
+        {
+          "role": "assistant",
+          "text": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？",
+          "debug": {
+            "active_rules": {
+              "global_objective": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。",
+              "intent_system_prompt": "你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。",
+              "guidance_system_prompt": "你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。",
+              "retrieval_policy": "专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。",
+              "assembly_policy": "最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。",
+              "closing_policy": "只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。"
+            },
+            "slot_extract": {},
+            "intent": {
+              "primary_intent": "opening",
+              "source": "local_fast_path"
+            },
+            "plan": {
+              "node": "流程引导库-开场节点",
+              "missing_goals": [
+                "grade_collected",
+                "subject_collected",
+                "trial_invited",
+                "wechat_collected"
+              ],
+              "requires_llm": false
+            },
+            "flow_hits": [
+              {
+                "material_id": "flow-1",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-2",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "2. 喂 家长您好，我们是人大附第二课堂，专注初高中一对一学科辅导，想问下孩子有没有哪科需要提升的呀？",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-3",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "3. 喂 您好，家长您好，我们重点学校一线在职老师，专做一对一提分的，老师都是海淀六小强，像人大附，清华附等一线重点学校的老师，提分有把握，请问孩子有没有哪些科目需要提升的？",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-4",
+                "node": "流程引导库-开场节点",
+                "tag": "开场白+中性话术",
+                "scene": "外呼启动后，优先触发，随机返回1条",
+                "content": "4. 喂  家长您好，我们是人大附第二课堂的，专做中高考一对一学科规划提升的，全部都是海淀一线在职老师，能快速提高100-120分，孩子现在学习情况怎么样？",
+                "score": 5.0
+              }
+            ],
+            "professional_hits": [],
+            "segments": {
+              "guidance_prefix": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？",
+              "professional": "",
+              "guidance_suffix": "",
+              "final_reply": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？"
+            },
+            "llm_calls": {},
+            "material_stats": {
+              "professional_materials": 220,
+              "flow_materials": 65,
+              "flow_rules": 14
+            }
+          }
+        },
+        {
+          "role": "user",
+          "text": "你是谁？"
+        },
+        {
+          "role": "assistant",
+          "text": "您好，我这边是北文教育课程咨询这边，主要是想了解下孩子最近的学习情况，看看有没有适合的提升方向。",
+          "debug": {
+            "active_rules": {
+              "global_objective": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。",
+              "intent_system_prompt": "你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。",
+              "guidance_system_prompt": "你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。",
+              "retrieval_policy": "专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。",
+              "assembly_policy": "最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。",
+              "closing_policy": "只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。"
+            },
+            "slot_extract": {
+              "grade": null,
+              "subject": null,
+              "wechat": null,
+              "schedule": null
+            },
+            "intent": {
+              "primary_intent": "identity",
+              "objection_label": null,
+              "emotion_needed": false,
+              "professional_needed": false,
+              "flow_break": false,
+              "return_to_flow": true,
+              "close_signal": false,
+              "tone_hint": "local_fast_path",
+              "source": "local_fast_path"
+            },
+            "plan": {
+              "node": "流程引导库-挖基础节点",
+              "preferred_flow_tags": [],
+              "missing_goals": [
+                "grade_collected",
+                "subject_collected",
+                "trial_invited",
+                "wechat_collected"
+              ],
+              "requires_professional": false,
+              "next_goal": "grade_collected",
+              "requires_llm": false
+            },
+            "flow_hits": [
+              {
+                "material_id": "flow-8",
+                "node": "流程引导库-挖基础节点",
+                "tag": "引导发问+年级提问",
+                "scene": "开场节点完成后，优先触发",
+                "content": "那想问下孩子现在读几年级呀？",
+                "score": 1.0
+              },
+              {
+                "material_id": "flow-9",
+                "node": "流程引导库-挖基础节点",
+                "tag": "引导发问+年级共情",
+                "scene": "家长回应孩子年级后触发",
+                "content": "哦，XX年级啊，这个阶段正是打基础/冲刺的关键期。",
+                "score": 1.0
+              },
+              {
+                "material_id": "flow-10",
+                "node": "流程引导库-挖基础节点",
+                "tag": "引导发问+薄弱科目提问",
+                "scene": "家长回应年级后，年级共情触发完毕后触发",
+                "content": "那孩子哪科学起来最费劲呀？比如数学、英语，还是语文？",
+                "score": 1.0
+              },
+              {
+                "material_id": "flow-11",
+                "node": "流程引导库-挖基础节点",
+                "tag": "引导发问+薄弱科目引导",
+                "scene": "家长说“都还行”，不愿明确说薄弱科目时触发",
+                "content": "其实很多孩子都有偏科的情况，哪怕小幅度薄弱，及时补也能避免越落越远，您再想想孩子哪科相对弱一点？",
+                "score": 1.0
+              }
+            ],
+            "professional_hits": [],
+            "segments": {
+              "guidance_prefix": "您好，我这边是北文教育课程咨询这边，主要是想了解下孩子最近的学习情况，看看有没有适合的提升方向。",
+              "professional": "",
+              "guidance_suffix": "",
+              "final_reply": "您好，我这边是北文教育课程咨询这边，主要是想了解下孩子最近的学习情况，看看有没有适合的提升方向。"
+            },
+            "llm_calls": {},
+            "material_stats": {
+              "professional_materials": 220,
+              "flow_materials": 65,
+              "flow_rules": 14
+            }
+          }
+        },
+        {
+          "role": "user",
+          "text": "先说你是哪家机构的"
+        },
+        {
+          "role": "assistant",
+          "text": "明白，我接着帮您往下梳理。 您家孩子现在几年级了？",
+          "debug": {
+            "active_rules": {
+              "global_objective": "你是电话招生单 Agent 的链路大脑。总目标是完成四件事：收集微信号、收集年级、收集学科、完成试听邀约。即使用户打断流程，也要先处理当前问题，再自然拉回未完成目标。",
+              "intent_system_prompt": "你只做意图分析，不直接回复家长。必须输出 JSON。判断当前轮是否需要情绪引导、是否需要专业答复、是否打断主流程、是否需要拉回流程，并识别 objection_label、professional_topics、close_signal、return_to_flow。禁止输出 JSON 之外的内容。",
+              "guidance_system_prompt": "你只生成引导性话术，不提供专业事实。引导性话术可以做共情、降压、转场、提出下一步问题、礼貌收尾，但不能编造师资、价格、效果、课程等专业信息。如果后面有专业素材，前缀负责安抚和承接，后缀负责把对话拉回流程。必须输出 JSON，字段为 prefix、suffix_question、tone。",
+              "retrieval_policy": "专业性内容只能来自 Data；流程推进参考只能来自 Data2。当家长问专业问题或提出异议时，先命中 Data 的专业素材；当需要回到流程时，参考 Data2 当前节点素材和规则。如果命中分低，标记素材缺口。",
+              "assembly_policy": "最终回复按顺序拼接：引导前缀 -> 专业素材 -> 拉回流程的问题。如果当前轮不需要专业素材，可以只输出引导前缀和拉回问题。回复尽量控制在 3 句话内，先回应家长，再推进目标。",
+              "closing_policy": "只有在微信号、年级、学科、试听邀约全部完成后，才能进入礼貌收尾。礼貌收尾时优先询问“您这边还有别的问题吗”，没有新问题再结束。"
+            },
+            "slot_extract": {
+              "grade": null,
+              "subject": null,
+              "wechat": null,
+              "schedule": null
+            },
+            "intent": {
+              "primary_intent": "statement",
+              "objection_label": null,
+              "emotion_needed": false,
+              "professional_needed": false,
+              "flow_break": false,
+              "return_to_flow": true,
+              "close_signal": false,
+              "tone_hint": "local_fast_path",
+              "source": "local_fast_path"
+            },
+            "plan": {
+              "node": "流程引导库-挖基础节点",
+              "preferred_flow_tags": [
+                "引导发问+年级提问"
+              ],
+              "missing_goals": [
+                "grade_collected",
+                "subject_collected",
+                "trial_invited",
+                "wechat_collected"
+              ],
+              "requires_professional": false,
+              "next_goal": "grade_collected",
+              "requires_llm": false
+            },
+            "flow_hits": [
+              {
+                "material_id": "flow-8",
+                "node": "流程引导库-挖基础节点",
+                "tag": "引导发问+年级提问",
+                "scene": "开场节点完成后，优先触发",
+                "content": "那想问下孩子现在读几年级呀？",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-36",
+                "node": "流程引导库-挖基础节点",
+                "tag": "引导发问+年级提问",
+                "scene": "家长愿意继续聊，但尚未提供孩子年级",
+                "content": "我先了解一个最关键的信息，您家孩子现在几年级了？不同年级现在抓的重点完全不一样。",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-37",
+                "node": "流程引导库-挖基础节点",
+                "tag": "引导发问+年级提问",
+                "scene": "家长只表达泛泛学习顾虑，未给具体信息",
+                "content": "为了不跟您说空话，我先确认下孩子现在是小学、初中还是高中，具体几年级呢？",
+                "score": 5.0
+              },
+              {
+                "material_id": "flow-9",
+                "node": "流程引导库-挖基础节点",
+                "tag": "引导发问+年级共情",
+                "scene": "家长回应孩子年级后触发",
+                "content": "哦，XX年级啊，这个阶段正是打基础/冲刺的关键期。",
+                "score": 1.0
+              }
+            ],
+            "professional_hits": [],
+            "segments": {
+              "guidance_prefix": "明白，我接着帮您往下梳理。",
+              "professional": "",
+              "guidance_suffix": "您家孩子现在几年级了？",
+              "final_reply": "明白，我接着帮您往下梳理。 您家孩子现在几年级了？"
+            },
+            "llm_calls": {},
+            "material_stats": {
+              "professional_materials": 220,
+              "flow_materials": 65,
+              "flow_rules": 14
+            }
+          }
+        }
+      ],
+      "state": {
+        "history": [
+          {
+            "role": "assistant",
+            "content": "1. 喂  您好，家长您好，我们是人大附第二课堂的，专做初高中一对一学科快速提分辅的导，前段时间和您联系过，最近孩子学习成绩怎么样，有什么变化吗？  哪些科目学习比较吃力？"
+          },
+          {
+            "role": "user",
+            "content": "你是谁？"
+          },
+          {
+            "role": "assistant",
+            "content": "您好，我这边是北文教育课程咨询这边，主要是想了解下孩子最近的学习情况，看看有没有适合的提升方向。"
+          },
+          {
+            "role": "user",
+            "content": "先说你是哪家机构的"
+          },
+          {
+            "role": "assistant",
+            "content": "明白，我接着帮您往下梳理。 您家孩子现在几年级了？"
+          }
+        ],
+        "current_node": "流程引导库-挖基础节点",
+        "turn_index": 2,
+        "grade": null,
+        "subject": null,
+        "wechat_contact": null,
+        "schedule_preference": null,
+        "trial_invited": false,
+        "close_prompted": false,
+        "ended": false,
+        "stop_requested": false,
+        "material_gap": false,
+        "last_intent": {
+          "primary_intent": "statement",
+          "objection_label": null,
+          "emotion_needed": false,
+          "professional_needed": false,
+          "flow_break": false,
+          "return_to_flow": true,
+          "close_signal": false,
+          "tone_hint": "local_fast_path",
+          "source": "local_fast_path"
+        },
+        "recent_professional_ids": []
+      }
+    }
+  ],
+  "categories": {
+    "already_have": 7,
+    "busy": 6,
+    "child_unwilling": 5,
+    "complaint": 7,
+    "effect": 1,
+    "expensive": 7,
+    "identity": 7,
+    "price": 17,
+    "privacy": 10,
+    "repeat_question": 5,
+    "risky": 3,
+    "robot_check": 4,
+    "small_talk": 5,
+    "stop_call": 7,
+    "trial": 9
+  }
+}
