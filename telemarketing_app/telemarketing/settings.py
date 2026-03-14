@@ -37,6 +37,13 @@ class Settings:
     clarify_max_rounds: int = 2
     brand_name: str = "北文教育"
     human_handoff: str = "人工顾问会在 30 分钟内回拨，或通过微信继续跟进。"
+    llm_enabled: bool = False
+    llm_provider: str = "dashscope"
+    llm_api_key: str = ""
+    llm_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    llm_model: str = "qwen3.5-plus"
+    llm_temperature: float = 0.2
+    llm_timeout_seconds: int = 30
 
 
 @lru_cache(maxsize=1)
@@ -45,6 +52,9 @@ def get_settings() -> Settings:
 
     def get_value(key: str, default: str) -> str:
         return os.getenv(key) or env_values.get(key, default)
+
+    def get_bool(key: str, default: bool) -> bool:
+        return get_value(key, "true" if default else "false").lower() in {"1", "true", "yes", "on"}
 
     knowledge_base_dir = Path(
         get_value(
@@ -77,4 +87,14 @@ def get_settings() -> Settings:
             "TELEMARKETING_HUMAN_HANDOFF",
             "人工顾问会在 30 分钟内回拨，或通过微信继续跟进。",
         ),
+        llm_enabled=get_bool("TELEMARKETING_LLM_ENABLED", False),
+        llm_provider=get_value("TELEMARKETING_LLM_PROVIDER", "dashscope"),
+        llm_api_key=get_value("TELEMARKETING_LLM_API_KEY", ""),
+        llm_base_url=get_value(
+            "TELEMARKETING_LLM_BASE_URL",
+            "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        ),
+        llm_model=get_value("TELEMARKETING_LLM_MODEL", "qwen3.5-plus"),
+        llm_temperature=float(get_value("TELEMARKETING_LLM_TEMPERATURE", "0.2")),
+        llm_timeout_seconds=int(get_value("TELEMARKETING_LLM_TIMEOUT_SECONDS", "30")),
     )

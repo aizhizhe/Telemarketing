@@ -161,6 +161,12 @@ SYSTEM_LAYERS = [
         "code": "search_and_rerank / search_qa / search_objection",
     },
     {
+        "layer": "LLM层",
+        "goal": "调用大模型做意图判断和回复润色，在鉴权失败时自动回退规则链路。",
+        "file": "telemarketing/llm_service.py + telemarketing/engine.py",
+        "code": "analyze_turn / rewrite_reply",
+    },
+    {
         "layer": "话术层",
         "goal": "把命中的知识、策略和销售目标组织成更像真人顾问的回复。",
         "file": "telemarketing/playbook.py + telemarketing/engine.py",

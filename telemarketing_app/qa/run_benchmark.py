@@ -3,195 +3,41 @@ from __future__ import annotations
 import json
 import sys
 import tempfile
-from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+TRAIN_DIR = ROOT.parent / "Train"
 sys.path.insert(0, str(ROOT))
 
-from telemarketing import Settings, TelemarketingEngine
+from telemarketing import Settings, TelemarketingEngine, get_settings
 from telemarketing.knowledge_base import KnowledgeBase
 from telemarketing.storage import TelemarketingStorage
 
 
-@dataclass
-class Scenario:
-    scenario_id: str
-    category: str
-    description: str
-    user_turns: list[str]
+BENCHMARK_FILE = TRAIN_DIR / "benchmark_scenarios_500.jsonl"
 
 
-GRADES = ["小学五年级", "六年级", "初一", "初二", "初三", "高一", "高二", "高三", "小学三年级", "四年级"]
-SUBJECTS = ["语文", "数学", "英语", "物理", "化学", "生物", "历史", "地理", "政治", "数学"]
-CONTACTS = [
-    "我微信是abc12345",
-    "电话是13800138000",
-    "我手机号13800138001，也是微信",
-    "加我微信wxmath2026",
-    "电话留给你，13800138002",
-]
-SCHEDULES = ["这周末方便", "下周二晚上可以", "这周三白天有空", "下周末可以安排", "明天晚上可以"]
-
-
-def build_scenarios() -> list[Scenario]:
-    scenarios: list[Scenario] = []
-
-    for index in range(10):
-        scenarios.append(
-            Scenario(
-                scenario_id=f"location_{index:02d}",
-                category="location",
-                description="先问校区，再表达距离顾虑，最后给出孩子信息和联系方式。",
-                user_turns=[
-                    "你们在哪啊？",
-                    f"有点远，孩子{GRADES[index]}{SUBJECTS[index]}，有没有线上？",
-                    CONTACTS[index % len(CONTACTS)],
-                    SCHEDULES[index % len(SCHEDULES)],
-                ],
-            )
-        )
-
-    for index in range(15):
-        scenarios.append(
-            Scenario(
-                scenario_id=f"price_{index:02d}",
-                category="price",
-                description="先问报价，再补年级学科，最后约试听。",
-                user_turns=[
-                    "我想了解一下报价",
-                    f"孩子{GRADES[index % len(GRADES)]}{SUBJECTS[index % len(SUBJECTS)]}",
-                    CONTACTS[index % len(CONTACTS)],
-                    SCHEDULES[index % len(SCHEDULES)],
-                ],
-            )
-        )
-
-    for index in range(10):
-        scenarios.append(
-            Scenario(
-                scenario_id=f"busy_{index:02d}",
-                category="busy_objection",
-                description="客户很忙，但并非完全无需求。",
-                user_turns=[
-                    "我现在很忙，没时间听你说",
-                    f"那你快点说，孩子{GRADES[index]}{SUBJECTS[index]}最近成绩不太稳",
-                    CONTACTS[index % len(CONTACTS)],
-                    "你先给我发资料",
-                ],
-            )
-        )
-
-    for index in range(10):
-        scenarios.append(
-            Scenario(
-                scenario_id=f"expensive_{index:02d}",
-                category="expensive_objection",
-                description="客户担心价格高，需要先评估再推进。",
-                user_turns=[
-                    "你们是不是很贵？",
-                    f"孩子{GRADES[index]}{SUBJECTS[index]}，我先看看值不值得",
-                    CONTACTS[index % len(CONTACTS)],
-                    "可以，先安排试听",
-                ],
-            )
-        )
-
-    for index in range(10):
-        scenarios.append(
-            Scenario(
-                scenario_id=f"no_need_{index:02d}",
-                category="no_need",
-                description="客户暂时无需求，要求顾问不要硬聊。",
-                user_turns=[
-                    "现在不需要，先不用了",
-                    "就是先不考虑",
-                    "先这样吧",
-                ],
-            )
-        )
-
-    for index in range(10):
-        scenarios.append(
-            Scenario(
-                scenario_id=f"already_have_{index:02d}",
-                category="already_have",
-                description="客户已有辅导老师，但效果一般。",
-                user_turns=[
-                    "我们已经在补课了",
-                    f"但是孩子{GRADES[index]}{SUBJECTS[index]}提升还是不明显",
-                    CONTACTS[index % len(CONTACTS)],
-                    SCHEDULES[index % len(SCHEDULES)],
-                ],
-            )
-        )
-
-    for index in range(15):
-        scenarios.append(
-            Scenario(
-                scenario_id=f"complaint_{index:02d}",
-                category="complaint",
-                description="投诉售后，要求同理、收集信息、建单。",
-                user_turns=[
-                    "我要投诉，老师老是迟到",
-                    CONTACTS[index % len(CONTACTS)],
-                    f"订单号A12345{100 + index}",
-                ],
-            )
-        )
-
-    for index in range(10):
-        scenarios.append(
-            Scenario(
-                scenario_id=f"smalltalk_{index:02d}",
-                category="small_talk",
-                description="先闲聊，再进入真实需求。",
-                user_turns=[
-                    "在吗",
-                    f"想问下孩子{GRADES[index]}{SUBJECTS[index]}有没有试听",
-                    CONTACTS[index % len(CONTACTS)],
-                    "可以，先约一下",
-                ],
-            )
-        )
-
-    for index in range(5):
-        scenarios.append(
-            Scenario(
-                scenario_id=f"risky_{index:02d}",
-                category="risky",
-                description="用户要求不合规承诺。",
-                user_turns=[
-                    "你们能不能保证提分20分？",
-                    "那你直接给我承诺一下",
-                    "不承诺就算了",
-                ],
-            )
-        )
-
-    for index in range(5):
-        scenarios.append(
-            Scenario(
-                scenario_id=f"repeat_{index:02d}",
-                category="repeat_question",
-                description="用户反复追问同一个问题，不能机械重复。",
-                user_turns=[
-                    "你们在哪啊？",
-                    "我还是想问你们到底在哪",
-                    "那你再说清楚一点",
-                    f"孩子{GRADES[index]}{SUBJECTS[index]}",
-                ],
-            )
-        )
-
+def load_scenarios() -> list[dict]:
+    scenarios: list[dict] = []
+    for raw in BENCHMARK_FILE.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if line:
+            scenarios.append(json.loads(line))
     return scenarios
 
 
-def evaluate_scenario(scenario: Scenario, transcript: list[dict]) -> tuple[dict[str, bool], list[str]]:
+def contains_any(text: str, options: list[str]) -> bool:
+    return any(option in text for option in options)
+
+
+def evaluate_scenario(scenario: dict, transcript: list[dict]) -> tuple[dict[str, bool], list[str]]:
     reasons: list[str] = []
     assistant_turns = [item for item in transcript if item["role"] == "assistant"]
     replies = [item["reply"] for item in assistant_turns]
-    result = assistant_turns[-1]["raw"] if assistant_turns else {}
+    all_reply_text = "\n".join(replies)
+    first_reply = replies[0] if replies else ""
+    final_result = assistant_turns[-1]["raw"] if assistant_turns else {}
+    final_state = final_result.get("state", {})
 
     checks = {
         "human_like": True,
@@ -200,7 +46,7 @@ def evaluate_scenario(scenario: Scenario, transcript: list[dict]) -> tuple[dict[
         "complete_flow": True,
     }
 
-    if not assistant_turns or any(len(reply.strip()) < 6 for reply in replies):
+    if not replies or any(len(reply.strip()) < 8 for reply in replies):
         checks["human_like"] = False
         reasons.append("存在空泛或过短回复")
 
@@ -208,74 +54,94 @@ def evaluate_scenario(scenario: Scenario, transcript: list[dict]) -> tuple[dict[
         checks["professional"] = False
         reasons.append("回复暴露结构化文本")
 
-    if any(replies[i] == replies[i - 1] for i in range(1, len(replies))):
+    if any(replies[index] == replies[index - 1] for index in range(1, len(replies))):
         checks["human_like"] = False
         reasons.append("连续回复完全重复")
 
-    if scenario.category in {"location", "price", "busy_objection", "expensive_objection", "already_have", "small_talk"}:
-        if not any(keyword in "".join(replies) for keyword in ("电话", "微信", "试听", "安排", "年级", "哪一科")):
-            checks["sales_focus"] = False
-            reasons.append("没有向销售推进")
-
-    if scenario.category == "location":
-        if not any(keyword in replies[0] for keyword in ("海淀", "人大附", "线上")):
+    for token_group in scenario.get("must_include", []):
+        if not contains_any(all_reply_text, token_group):
             checks["professional"] = False
-            reasons.append("校区问题未优先使用知识库关键信息")
+            reasons.append(f"未包含关键表达: {'/'.join(token_group)}")
 
-    if scenario.category == "price":
-        if not any(keyword in "".join(replies[:2]) for keyword in ("年级", "科", "线上", "线下", "报价")):
+    for token_group in scenario.get("must_not_include", []):
+        if contains_any(first_reply, token_group):
             checks["professional"] = False
-            reasons.append("报价场景没有专业收集必要信息")
+            reasons.append(f"首轮出现不应出现的表达: {'/'.join(token_group)}")
 
-    if scenario.category in {"busy_objection", "expensive_objection", "already_have"}:
-        if not any(keyword in replies[0] for keyword in ("理解", "明白", "正常")):
-            checks["human_like"] = False
-            reasons.append("异议处理缺少共情")
+    if scenario.get("reply_type") and final_result.get("reply_type") != scenario["reply_type"]:
+        checks["professional"] = False
+        reasons.append(f"reply_type 应为 {scenario['reply_type']}，实际为 {final_result.get('reply_type')}")
 
-    if scenario.category == "no_need":
-        if any(keyword in "".join(replies[-1:]) for keyword in ("电话", "微信", "马上安排")):
+    category = scenario["category"]
+    if category in {"price", "trial", "busy", "expensive", "already_have", "child_unwilling", "small_talk"}:
+        if not contains_any(all_reply_text, ["年级", "哪一科", "试听", "安排", "顾问", "微信", "电话"]):
             checks["sales_focus"] = False
-            reasons.append("明确无需求时仍然强推留资")
+            reasons.append("销售推进不足")
 
-    if scenario.category == "complaint":
-        if not any(keyword in replies[0] for keyword in ("理解", "抱歉", "着急")):
+    if category in {"stop_call", "privacy"}:
+        if not contains_any(all_reply_text, ["停止联系", "不再联系", "标记", "打扰", "抱歉"]):
             checks["human_like"] = False
-            reasons.append("投诉场景首轮缺少安抚")
-        if not any(keyword in "".join(replies) for keyword in ("工单号", "登记", "建单")):
+            reasons.append("未对打扰/隐私顾虑做出合适回应")
+
+    if category == "complaint":
+        if not contains_any(all_reply_text, ["工单号", "登记", "售后"]):
             checks["complete_flow"] = False
-            reasons.append("投诉场景未走到建单")
+            reasons.append("投诉场景未完成建单/转售后")
 
-    if scenario.category == "risky":
-        if not any(item["raw"]["reply_type"] == "refuse" for item in assistant_turns if item["raw"]):
-            checks["professional"] = False
-            reasons.append("风险场景没有拒答")
+    if scenario.get("needs_variation") and len(set(replies[:3])) < 2:
+        checks["human_like"] = False
+        reasons.append("重复追问时回复缺少变体")
 
-    if scenario.category == "repeat_question":
-        if len(set(replies[:3])) < 2:
-            checks["human_like"] = False
-            reasons.append("重复提问时仍像机器一样重复同句")
-
-    if scenario.category not in {"risky", "no_need"}:
-        final_state = result.get("state", {})
+    final_outcome = scenario.get("final_outcome", "")
+    if final_outcome == "lead":
+        if not final_state.get("lead_id"):
+            checks["complete_flow"] = False
+            reasons.append("销售场景未形成线索")
+    elif final_outcome == "ticket":
+        if not final_state.get("ticket_id"):
+            checks["complete_flow"] = False
+            reasons.append("投诉场景未形成工单")
+    elif final_outcome == "lead_or_progress":
         if not (
             final_state.get("lead_id")
-            or final_state.get("ticket_id")
-            or final_state.get("handoff_status") == "pending"
-            or result.get("next_action") in {"handoff_to_sales", "after_sales_followup", "soft_close"}
+            or final_result.get("next_action", "").startswith("collect_")
+            or final_result.get("next_action") == "consultant_follow_up"
         ):
             checks["complete_flow"] = False
-            reasons.append("完整流程没有收束到线索、工单或明确收口")
+            reasons.append("重复追问场景未形成有效推进")
+
+    final_action = scenario.get("final_action", "")
+    if final_action and final_result.get("next_action") != final_action:
+        checks["complete_flow"] = False
+        reasons.append(f"next_action 应为 {final_action}，实际为 {final_result.get('next_action')}")
 
     return checks, reasons
 
 
 def run() -> dict:
-    scenarios = build_scenarios()
+    scenarios = load_scenarios()
     temp_dir = tempfile.TemporaryDirectory()
+    base_settings = get_settings()
     settings = Settings(
         knowledge_base_dir=ROOT / "knowledge_base" / "raw",
         database_path=Path(temp_dir.name) / "benchmark.db",
-        api_key="",
+        api_key=base_settings.api_key,
+        base_url=base_settings.base_url,
+        chat_model=base_settings.chat_model,
+        embedding_model=base_settings.embedding_model,
+        embedding_dim=base_settings.embedding_dim,
+        top_k=base_settings.top_k,
+        top_n=base_settings.top_n,
+        clarify_max_rounds=base_settings.clarify_max_rounds,
+        brand_name=base_settings.brand_name,
+        human_handoff=base_settings.human_handoff,
+        llm_enabled=base_settings.llm_enabled,
+        llm_provider=base_settings.llm_provider,
+        llm_api_key=base_settings.llm_api_key,
+        llm_base_url=base_settings.llm_base_url,
+        llm_model=base_settings.llm_model,
+        llm_temperature=base_settings.llm_temperature,
+        llm_timeout_seconds=base_settings.llm_timeout_seconds,
     )
     engine = TelemarketingEngine(
         settings=settings,
@@ -290,40 +156,33 @@ def run() -> dict:
 
     for scenario in scenarios:
         transcript: list[dict] = []
-        for turn_index, user_text in enumerate(scenario.user_turns):
+        for user_text in scenario["user_turns"]:
             transcript.append({"role": "user", "text": user_text})
             result = engine.chat(
                 user_text=user_text,
-                external_user_id=f"user-{scenario.scenario_id}",
-                session_key=f"session-{scenario.scenario_id}",
+                external_user_id=f"user-{scenario['scenario_id']}",
+                session_key=f"session-{scenario['scenario_id']}",
                 channel="phone",
                 nickname="测试用户",
             )
             transcript.append({"role": "assistant", "reply": result["reply"], "raw": result})
 
         checks, reasons = evaluate_scenario(scenario, transcript)
-        scenario_score = sum(1 for passed in checks.values() if passed)
+        passed = sum(1 for item in checks.values() if item)
         total_checks += len(checks)
-        passed_checks += scenario_score
-        transcripts.append(
-            {
-                "scenario_id": scenario.scenario_id,
-                "category": scenario.category,
-                "description": scenario.description,
-                "checks": checks,
-                "reasons": reasons,
-                "transcript": transcript,
-            }
-        )
+        passed_checks += passed
+
+        record = {
+            "scenario_id": scenario["scenario_id"],
+            "category": scenario["category"],
+            "description": scenario["description"],
+            "checks": checks,
+            "reasons": reasons,
+            "transcript": transcript,
+        }
+        transcripts.append(record)
         if reasons:
-            failures.append(
-                {
-                    "scenario_id": scenario.scenario_id,
-                    "category": scenario.category,
-                    "checks": checks,
-                    "reasons": reasons,
-                }
-            )
+            failures.append(record)
 
     accuracy = round(passed_checks / total_checks * 100, 2)
     report = {
@@ -331,38 +190,49 @@ def run() -> dict:
         "total_checks": total_checks,
         "passed_checks": passed_checks,
         "accuracy": accuracy,
+        "failure_count": len(failures),
         "failures": failures,
         "transcripts": transcripts,
     }
 
     runtime_dir = ROOT / "runtime"
     runtime_dir.mkdir(parents=True, exist_ok=True)
-    (runtime_dir / "benchmark_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    train_report_dir = TRAIN_DIR / "reports"
+    train_report_dir.mkdir(parents=True, exist_ok=True)
 
-    lines = [
+    for path in (runtime_dir / "benchmark_report.json", train_report_dir / "benchmark_report.json"):
+        path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    markdown = [
         "# Telemarketing Benchmark",
         "",
         f"- 场景数: {len(scenarios)}",
         f"- 检查项: {total_checks}",
         f"- 通过项: {passed_checks}",
         f"- 正确率: {accuracy}%",
+        f"- 失败场景: {len(failures)}",
         "",
     ]
     if failures:
-        lines.append("## Failures")
-        lines.append("")
-        for item in failures[:20]:
-            lines.append(f"- {item['scenario_id']} ({item['category']}): {'；'.join(item['reasons'])}")
+        markdown.append("## Top Failures")
+        markdown.append("")
+        for item in failures[:30]:
+            markdown.append(f"- {item['scenario_id']} ({item['category']}): {'；'.join(item['reasons'])}")
     else:
-        lines.append("## Result")
-        lines.append("")
-        lines.append("- 所有场景通过。")
+        markdown.extend(["## Result", "", "- 全部场景通过。"])
+    markdown_text = "\n".join(markdown)
+    for path in (runtime_dir / "benchmark_report.md", train_report_dir / "benchmark_report.md"):
+        path.write_text(markdown_text, encoding="utf-8")
 
-    (runtime_dir / "benchmark_report.md").write_text("\n".join(lines), encoding="utf-8")
     temp_dir.cleanup()
     return report
 
 
 if __name__ == "__main__":
     summary = run()
-    print(json.dumps({k: summary[k] for k in ("scenario_count", "total_checks", "passed_checks", "accuracy")}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {key: summary[key] for key in ("scenario_count", "total_checks", "passed_checks", "accuracy", "failure_count")},
+            ensure_ascii=False,
+        )
+    )

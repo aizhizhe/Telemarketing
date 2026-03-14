@@ -360,3 +360,5 @@ faq_consult / need_clarify / sales_lead / complaint_after_sales / small_talk / o
 - 高价值触发词先只保留：`价格、报价、试用、演示、合作、购买、联系销售`。
 - 如果你要，我下一步可以直接继续补两份可落地材料：`接口 API 清单` 和 `后台管理端页面原型清单`。
 ```
+
+文心一言Key：sk-a9f80f0a9a214e1fa70a30d63d29551d
