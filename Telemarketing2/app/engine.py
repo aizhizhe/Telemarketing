@@ -28,14 +28,33 @@ NODE_INVITE = "流程引导库-邀试听节点"
 QUESTION_MARKERS = ("?", "？", "吗", "么", "怎么", "为什么", "哪里", "在哪", "有没有", "能不能", "可不可以")
 CLOSE_MARKERS = ("没有了", "没了", "没有问题", "没有别的了", "先这样", "再见", "拜拜")
 STOP_MARKERS = ("别再打", "不要再打", "别再给我打电话", "不要给我打电话", "别联系了", "不需要", "不用了", "拉黑", "投诉你们", "停一下")
-PRIVACY_MARKERS = ("怎么有我电话", "哪来的电话", "谁给你电话", "谁把我的信息", "信息泄露", "隐私", "哪来的信息")
-IDENTITY_MARKERS = ("你是谁", "你哪位", "你谁啊", "你谁", "你找我干嘛", "你找我做什么", "你是干嘛的", "什么机构")
+PRIVACY_MARKERS = ("怎么有我电话", "哪来的电话", "谁给你电话", "谁把我的信息", "信息泄露", "隐私", "哪来的信息", "怎么还打", "不买课了", "一天打十几个电话", "太烦了")
+IDENTITY_MARKERS = ("你是谁", "你哪位", "你谁啊", "你谁", "你找我干嘛", "你找我做什么", "你是干嘛的", "什么机构", "哪家机构", "哪家机构的")
 ROBOT_MARKERS = ("你是真人吗", "机器人", "AI吗", "自动回复吗")
-ROLE_MARKERS = ("你能帮我做什么", "你能做什么", "你是做什么的", "你们是干嘛的", "你们做什么的")
+ROLE_MARKERS = ("你能帮我做什么", "你能为我做什么", "你能做什么", "你是做什么的", "你们是干嘛的", "你们做什么的", "你们能帮我什么")
+DISTRUST_MARKERS = ("骗子", "骗人", "诈骗", "忽悠", "套话", "营销吧", "假的吧", "不靠谱", "真的假的")
+HOSTILE_MARKERS = ("有病吧", "神经病", "烦死了", "滚", "别烦我", "有完没完", "离谱", "傻逼", "煞笔", "沙比", "傻x", "傻X")
+CALLBACK_MARKERS = ("开会", "晚点打", "稍后打", "回头打", "待会打", "不方便接电话")
+PROOF_MARKERS = ("有资质吗", "正规的吗", "白名单", "备案", "哪家机构", "什么机构", "真假", "真的假的")
 PING_MARKERS = ("在吗", "在不在", "喂")
 COMPLAINT_MARKERS = ("我要投诉", "售后", "退费", "退款", "迟到", "课时", "工单", "订单")
 RISKY_MARKERS = ("保证提分", "保分", "保证涨分", "直接承诺", "签保过")
 OFFTOPIC_MARKERS = ("天气", "股市", "彩票", "电影", "明星", "八卦")
+EXTERNAL_TOPIC_MARKERS = (
+    "美国",
+    "伊朗",
+    "以色列",
+    "俄罗斯",
+    "乌克兰",
+    "中东",
+    "战争",
+    "打仗",
+    "军事",
+    "国际新闻",
+    "总统",
+    "政治",
+    "外交",
+)
 CONCERN_MARKERS = ("成绩", "掉得厉害", "不太稳", "薄弱", "效果一般", "抵触", "抗拒", "不愿意学", "跟不上", "拉分")
 PRICE_MARKERS = ("价格", "收费", "费用", "报价", "贵", "值不值得")
 LOCATION_MARKERS = ("在哪", "地址", "校区", "位置", "海淀")
@@ -98,6 +117,230 @@ def _split_reply_sentences(text: str) -> list[str]:
         return []
     parts = re.split(r"(?<=[。！？!?])", content)
     return [item.strip() for item in parts if item.strip()]
+
+
+def _recover_slots_from_history(history: list[dict[str, str]]) -> dict[str, str | None]:
+    recovered = {"grade": None, "subject": None, "wechat": None, "schedule": None}
+    for item in reversed(history[-10:]):
+        if item.get("role") != "user":
+            continue
+        content = clean_text(item.get("content"))
+        if not content:
+            continue
+        if not recovered["grade"]:
+            recovered["grade"] = extract_grade(content)
+        if not recovered["subject"]:
+            subjects = extract_subjects(content)
+            recovered["subject"] = subjects[0] if subjects else None
+        if not recovered["wechat"]:
+            recovered["wechat"] = extract_wechat(content)
+        if not recovered["schedule"]:
+            recovered["schedule"] = _extract_schedule(content)
+        if all(recovered.values()):
+            break
+    return recovered
+
+
+def _looks_like_unclear_input(text: str, extracted: dict[str, str | None], objection_label: str | None) -> bool:
+    cleaned = clean_text(text)
+    if not cleaned or objection_label:
+        return False
+    if any(extracted.values()):
+        return False
+    if any(char.isdigit() for char in cleaned):
+        return False
+    return len(cleaned) <= 4 and bool(re.fullmatch(r"[A-Za-z\u4e00-\u9fff]+", cleaned))
+
+
+def _is_contradiction_turn(user_text: str, extracted: dict[str, str | None], state: "ConversationState") -> bool:
+    if not any(extracted.values()):
+        return False
+    if not any(token in user_text for token in ("不对", "其实", "改一下", "说错了", "重新说")):
+        return False
+    if extracted.get("grade") and state.grade and extracted["grade"] != state.grade:
+        return True
+    if extracted.get("subject") and state.subject and extracted["subject"] != state.subject:
+        return True
+    return False
+
+
+def _repeat_user_message_count(state: "ConversationState", user_text: str) -> int:
+    target = _normalize_text(user_text)
+    if not target:
+        return 0
+    return sum(
+        1
+        for item in state.history
+        if item.get("role") == "user" and _normalize_text(item.get("content", "")) == target
+    )
+
+
+def _reply_strategy_hints(
+    *,
+    user_text: str,
+    state: "ConversationState",
+    intent: dict[str, Any],
+    plan: dict[str, Any],
+) -> list[str]:
+    fast_case = intent.get("fast_case") or intent.get("primary_intent")
+    repeat_count = _repeat_user_message_count(state, user_text)
+    hints: list[str] = []
+
+    if fast_case in {"distrust", "hostile"}:
+        hints.append("先处理家长的不信任或敌意，再决定是否继续推进。")
+        hints.append("除非家长明确愿意继续，否则不要追问年级、学科、试听或微信。")
+        if repeat_count >= 2:
+            hints.append("家长已经重复表达同一质疑，本轮不要重复上一轮的自我介绍和来电说明。")
+            hints.append("优先给出尊重退出、先不打扰或简短收束的回复。")
+            hints.append("如果仍要回应，必须明显换句式和信息顺序，不能与上一轮基本相同。")
+    elif fast_case == "privacy":
+        hints.append("隐私顾虑优先于销售推进，先回应顾虑，再给停止联系选项。")
+    elif fast_case == "proof_request":
+        hints.append("先满足对方的证明需求，再考虑是否自然回到流程。")
+    elif fast_case == "callback_later":
+        hints.append("用户明确说稍后联系时，优先确认时间，不要继续销售展开。")
+    elif fast_case == "contradiction":
+        hints.append("先确认刚修正的信息，以新信息为准，不要直接推进下一步。")
+    elif fast_case == "off_topic":
+        hints.append("这是与招生目标无关的跑题内容，先礼貌承接，再拉回孩子学习，不要直接问年级。")
+    elif fast_case == "unclear":
+        hints.append("用户表达不清时先澄清，不要默认追问年级。")
+
+    if not plan.get("missing_goals"):
+        hints.append("核心目标已收集完成，本轮优先礼貌收尾。")
+    return hints
+
+
+def _fallback_reply_candidates(
+    *,
+    user_text: str,
+    state: "ConversationState",
+    intent: dict[str, Any],
+    repeat_count: int,
+) -> list[str]:
+    fast_case = intent.get("fast_case") or intent.get("primary_intent")
+    if fast_case == "distrust":
+        if repeat_count >= 1:
+            return [
+                "理解您的顾虑，陌生来电谨慎一点很正常。如果您现在不想继续，我这边先不打扰您。",
+                "能理解您会担心这点，这通电话我先不继续占用您时间了，您后面愿意了解我们再沟通。",
+                "理解您的顾虑，您要是暂时不放心，我这边就先不打扰了。",
+            ]
+        return [
+            "理解您的顾虑，陌生来电谨慎一点很正常。如果您不想继续，我这边可以先结束。",
+            "能理解您会担心这个，我先把来电目的说清楚；如果您现在不想继续，我就不打扰您。",
+        ]
+    if fast_case == "hostile":
+        return [
+            "抱歉打扰到您了，我这边先不继续占用您时间，如果您不想继续我就先不打扰了。",
+            "理解您现在不方便，这通电话我先到这里，不继续打扰您了。",
+        ]
+    if fast_case == "privacy":
+        return [
+            "理解您的顾虑，如果您不希望继续联系，我这边可以先停止联系，不再打扰您。",
+            "这类问题谨慎一点很正常，您如果不想继续，我这边就先不打扰了。",
+        ]
+    if fast_case == "proof_request":
+        return [
+            "可以，我先把机构身份和来电目的说清楚，不耽误您太久。",
+            "没问题，我先说明我们是谁、这通电话是做什么的，您觉得合适再继续。",
+        ]
+    if fast_case == "off_topic":
+        return [
+            "这个话题我先不展开，咱们还是尽量聚焦孩子学习这件事。您最近更担心孩子哪方面？",
+            "这个问题和这通电话关系不大，我先不占用您时间展开了。要不还是说回孩子最近的学习情况？",
+        ]
+    if fast_case == "unclear":
+        return [
+            "我这边可能没听清，您刚刚是想说孩子学习上的事，还是想先了解课程安排？",
+            "抱歉，我刚刚没太听明白。您是想聊孩子最近的学习情况，还是先问课程？",
+        ]
+    return []
+
+
+def _looks_like_external_topic(text: str) -> bool:
+    cleaned = clean_text(text)
+    if not cleaned:
+        return False
+    return _contains_any(cleaned, EXTERNAL_TOPIC_MARKERS)
+
+
+def _required_terms_for_turn(user_text: str, intent: dict[str, Any]) -> list[str]:
+    required: list[str] = []
+    fast_case = intent.get("fast_case") or intent.get("primary_intent")
+    objection = intent.get("objection_label")
+
+    if _contains_any(user_text, PRICE_MARKERS):
+        required.extend(["报价", "费用"])
+    if objection == "价格顾虑":
+        required.extend(["年级", "科目", "方案"])
+    if objection == "没时间":
+        required.extend(["理解", "明白", "关键", "重点"])
+    if objection == "孩子抗拒":
+        required.extend(["常见", "理解", "原因", "方式"])
+    if objection == "已报班":
+        required.extend(["理解", "已经有老师", "判断", "效果"])
+    if fast_case in {"identity", "role_explain"}:
+        required.extend(["北文教育", "课程咨询", "了解", "课程"])
+        if any(token in user_text for token in ("干嘛", "做什么", "什么机构")):
+            required.extend(["来电目的", "学习情况"])
+        if any(token in user_text for token in ("做什么", "帮我", "帮")):
+            required.extend(["帮", "问题"])
+    if fast_case in {"distrust", "hostile"}:
+        required.append("理解")
+        if fast_case == "distrust":
+            required.append("顾虑")
+    if fast_case == "callback_later":
+        required.extend(["理解", "方便"])
+    if fast_case == "contradiction":
+        required.extend(["确认", "刚才"])
+    if fast_case == "proof_request":
+        required.extend(["北文教育", "课程咨询", "了解", "学习情况"])
+    if fast_case == "robot":
+        required.extend(["真人顾问", "智能咨询助手", "了解"])
+        if any(token in user_text for token in ("做什么", "帮我", "帮")):
+            required.extend(["帮", "问题", "学习情况"])
+    if fast_case == "stop_call":
+        required.extend(["抱歉", "打扰", "不再联系", "标记", "停止联系", "不再继续打扰"])
+    if fast_case == "privacy":
+        required.extend(["理解", "联系"])
+    if fast_case == "risky" or any(token in user_text for token in ("保证", "承诺")):
+        required.extend(["不能", "保证", "课程", "流程"])
+    return list(dict.fromkeys(required))
+
+
+def _forbidden_terms_for_turn(intent: dict[str, Any]) -> list[str]:
+    fast_case = intent.get("fast_case") or intent.get("primary_intent")
+    if fast_case in {"identity", "role_explain", "robot", "proof_request"}:
+        return ["几年级", "年级", "哪科", "科目", "学科"]
+    if fast_case in {"distrust", "hostile"}:
+        return ["几年级", "年级", "哪科", "科目", "学科", "学习情况", "试听", "试课", "微信"]
+    if fast_case == "privacy":
+        return ["几年级", "年级", "哪科", "科目", "学科", "学习情况", "试听", "试课", "微信"]
+    if fast_case == "off_topic":
+        return ["几年级", "年级"]
+    return []
+
+
+def _reply_violations(reply: str, *, required_terms: list[str], forbidden_terms: list[str], previous_assistant: str) -> list[str]:
+    violations: list[str] = []
+    for term in required_terms:
+        if term and term not in reply:
+            violations.append(f"missing_required:{term}")
+    for term in forbidden_terms:
+        if term and term in reply:
+            violations.append(f"contains_forbidden:{term}")
+    if previous_assistant and _normalize_text(previous_assistant) == _normalize_text(reply):
+        violations.append("duplicate_previous_reply")
+    return violations
+
+
+def _verdict_needs_repair(verdict: str, notes: str) -> bool:
+    text = clean_text(f"{verdict} {notes}")
+    if not text:
+        return False
+    markers = ("需要优化", "未有效推进", "不够自然", "不自然", "需要调整", "不够合适", "未推进流程")
+    return any(marker in text for marker in markers)
 
 
 @dataclass
@@ -270,6 +513,15 @@ class ConversationEngine:
         state.history.append({"role": "user", "content": user_text})
 
         extracted = self._extract_slots(user_text)
+        recovered_slots = _recover_slots_from_history(state.history)
+        if not state.grade and recovered_slots["grade"]:
+            state.grade = recovered_slots["grade"]
+        if not state.subject and recovered_slots["subject"]:
+            state.subject = recovered_slots["subject"]
+        if not state.wechat_contact and recovered_slots["wechat"]:
+            state.wechat_contact = recovered_slots["wechat"]
+        if not state.schedule_preference and recovered_slots["schedule"]:
+            state.schedule_preference = recovered_slots["schedule"]
         if extracted["grade"] and not state.grade:
             state.grade = extracted["grade"]
         if extracted["subject"] and not state.subject:
@@ -312,6 +564,10 @@ class ConversationEngine:
             )
 
         base_intent = self._classify_turn(user_text, extracted)
+        if _is_contradiction_turn(user_text, extracted, state):
+            base_intent["primary_intent"] = "contradiction"
+            base_intent["fast_case"] = "contradiction"
+            base_intent["question_like"] = True
         plan = self._plan_turn(state, base_intent)
 
         flow_hits = self.materials.search_flow(node=plan["node"], preferred_tags=plan["preferred_flow_tags"], top_k=6)
@@ -431,6 +687,14 @@ class ConversationEngine:
             fast_case = "privacy"
         elif _contains_any(user_text, COMPLAINT_MARKERS):
             fast_case = "complaint"
+        elif _contains_any(user_text, DISTRUST_MARKERS):
+            fast_case = "distrust"
+        elif _contains_any(user_text, HOSTILE_MARKERS):
+            fast_case = "hostile"
+        elif _contains_any(user_text, CALLBACK_MARKERS):
+            fast_case = "callback_later"
+        elif _contains_any(user_text, PROOF_MARKERS):
+            fast_case = "proof_request"
         elif _contains_any(user_text, RISKY_MARKERS):
             fast_case = "risky"
         elif _contains_any(user_text, ROLE_MARKERS):
@@ -443,8 +707,10 @@ class ConversationEngine:
             fast_case = "trial_request"
         elif user_text in PING_MARKERS:
             fast_case = "small_talk"
-        elif _contains_any(user_text, OFFTOPIC_MARKERS):
+        elif _contains_any(user_text, OFFTOPIC_MARKERS) or _looks_like_external_topic(user_text):
             fast_case = "off_topic"
+        elif _looks_like_unclear_input(user_text, extracted, objection_label):
+            fast_case = "unclear"
         elif self._is_slot_only_turn(user_text, extracted, objection_label):
             fast_case = "slot_only"
 
@@ -492,7 +758,7 @@ class ConversationEngine:
         if fast_case in {"stop_call", "privacy", "complaint", "risky"}:
             node = NODE_PROFESSIONAL
             requires_professional = fast_case in {"privacy", "complaint", "risky"}
-        elif fast_case in {"identity", "robot", "role_explain", "small_talk"}:
+        elif fast_case in {"identity", "robot", "role_explain", "small_talk", "unclear", "distrust", "hostile", "callback_later", "proof_request", "contradiction"}:
             node = NODE_DISCOVERY
         elif fast_case == "trial_request":
             node = NODE_INVITE
@@ -533,9 +799,9 @@ class ConversationEngine:
 
     def _needs_llm(self, base_intent: dict[str, Any], plan: dict[str, Any]) -> bool:
         fast_case = base_intent.get("fast_case")
-        if fast_case in {"identity", "robot", "role_explain"}:
+        if fast_case in {"identity", "robot", "role_explain", "distrust", "hostile", "proof_request"}:
             return True
-        if fast_case in {"stop_call", "privacy", "complaint", "risky", "small_talk", "slot_only", "off_topic", "trial_request"}:
+        if fast_case in {"stop_call", "privacy", "complaint", "risky", "small_talk", "slot_only", "off_topic", "trial_request", "unclear", "callback_later", "contradiction"}:
             return False
         return bool(plan["requires_professional"])
 
@@ -637,6 +903,27 @@ class ConversationEngine:
         professional_hits: list[dict[str, Any]],
         draft_reply: str,
     ) -> dict[str, Any]:
+        history_slots = _recover_slots_from_history(state.history)
+        repeat_count = _repeat_user_message_count(state, user_text)
+        strategy_hints = _reply_strategy_hints(user_text=user_text, state=state, intent=intent, plan=plan)
+        fast_case = intent.get("fast_case") or intent.get("primary_intent")
+        current_turn_slots = {
+            "grade": extract_grade(user_text),
+            "subject": (extract_subjects(user_text) or [None])[0],
+            "wechat": extract_wechat(user_text),
+            "schedule": _extract_schedule(user_text),
+        }
+        required_terms = _required_terms_for_turn(user_text, intent)
+        for value in current_turn_slots.values():
+            if value:
+                required_terms.append(value)
+        required_terms = list(dict.fromkeys(required_terms))
+        forbidden_terms = _forbidden_terms_for_turn(intent)
+        if repeat_count >= 2 and fast_case in {"distrust", "hostile", "privacy"}:
+            required_terms.append("不打扰")
+            forbidden_terms.extend(["学习情况", "提升", "效果", "帮助"])
+            forbidden_terms = list(dict.fromkeys(forbidden_terms))
+        previous_assistant = next((item["content"] for item in reversed(state.history) if item.get("role") == "assistant"), "")
         messages = [
             {
                 "role": "system",
@@ -653,8 +940,16 @@ class ConversationEngine:
                     "2. 可以重写语气、顺序和表达，但不能丢掉本轮核心目标；"
                     "3. 回复要像真人，避免模板味、避免空话、避免重复；"
                     "4. 先回应家长，再给专业信息，最后自然推进流程；"
-                    "5. 一般控制在 2 到 3 句；"
-                    "6. 只输出 JSON，字段必须包含 final_reply, verdict, notes。"
+                    "5. 如果 recent_history 或 history_slot_hints 已经明确给出年级、学科、微信或时间，就不能再重复追问该信息，而是转向下一个未完成目标；"
+                    "6. 如果 latest_user_message 像打错字、含义不清或噪声输入，要先短句澄清，不要硬推进错误流程；"
+                    "7. 如果家长先问你能做什么、你是谁、你们做什么，必须先回答身份和能提供什么帮助，再自然推进下一步；"
+                    "8. 如果 required_terms 非空，尽量自然保留这些原词，不要遗漏；"
+                    "9. 一般控制在 2 到 3 句；"
+                    "10. verdict 只能表示 final_reply 是否可直接发送，推荐使用 pass 或 repaired，不要只说需要优化却不给可发出的回复；"
+                    "11. final_reply 必须是此刻就能直接发给用户的最终结果；"
+                    "12. 如果 strategy_hints 提示当前轮不该推进流程，就不要强行追问；"
+                    "13. 如果 repeat_user_message_count 大于等于 2，必须避免与 previous_assistant_reply 基本相同，并优先收束，不要继续销售展开；"
+                    "14. 只输出 JSON，字段必须包含 final_reply, verdict, notes。"
                 ),
             },
             {
@@ -670,6 +965,13 @@ class ConversationEngine:
                             "schedule_preference": state.schedule_preference,
                             "trial_invited": state.trial_invited,
                         },
+                        "history_slot_hints": history_slots,
+                        "current_turn_slots": current_turn_slots,
+                        "required_terms": required_terms,
+                        "forbidden_terms": forbidden_terms,
+                        "previous_assistant_reply": previous_assistant,
+                        "repeat_user_message_count": repeat_count,
+                        "strategy_hints": strategy_hints,
                         "intent": intent,
                         "plan": plan,
                         "draft_reply": draft_reply,
@@ -702,17 +1004,262 @@ class ConversationEngine:
         )
         parsed = _safe_json_parse(llm_call["response_text"]) or {}
         final_reply = clean_text(parsed.get("final_reply")) or draft_reply
+        verdict = clean_text(parsed.get("verdict"))
+        notes = clean_text(parsed.get("notes"))
+        violations = _reply_violations(
+            final_reply,
+            required_terms=required_terms,
+            forbidden_terms=forbidden_terms,
+            previous_assistant=previous_assistant,
+        )
+        if _verdict_needs_repair(verdict, notes):
+            violations.append("verdict_requires_repair")
+        if repeat_count >= 2 and "duplicate_previous_reply" in violations:
+            violations.append("needs_strategy_shift")
+
+        repair_attempts: list[dict[str, Any]] = []
+        while violations and len(repair_attempts) < 2:
+            repair_messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "你现在只做回复修正。"
+                        "你必须修正当前回复里的硬性问题，并输出更自然、更像真人专业电话销售的话术。"
+                        "final_reply 必须逐字包含 required_terms 里的每一个词；"
+                        "final_reply 绝不能出现 forbidden_terms 里的任何词；"
+                        "final_reply 不能与 previous_assistant_reply 基本重复；"
+                        "如果 violations 里有 duplicate_previous_reply，必须明显换一个句式，并补充来电目的或下一步；"
+                        "如果 violations 里有 needs_strategy_shift，说明用户已重复表达同一立场，本轮要切换策略，不要继续用上一轮的话术结构；"
+                        "如果 violations 里有 verdict_requires_repair，必须直接给出优化后的可发送回复，不要再评价需要优化；"
+                        "专业事实仍然只能使用提供的 professional_reference；"
+                        "如果 strategy_hints 提示先收束或先不打扰，就不要硬推进流程；"
+                        "回复控制在 2 到 3 句；"
+                        "只输出 JSON，字段必须包含 final_reply, verdict, notes。"
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {
+                            "latest_user_message": user_text,
+                            "current_reply": final_reply,
+                            "violations": violations,
+                            "required_terms": required_terms,
+                            "forbidden_terms": forbidden_terms,
+                            "previous_assistant_reply": previous_assistant,
+                            "repeat_user_message_count": repeat_count,
+                            "strategy_hints": strategy_hints,
+                            "history_slot_hints": history_slots,
+                            "draft_reply": draft_reply,
+                            "flow_reference": [
+                                {
+                                    "tag": hit.get("tag"),
+                                    "content": split_sentences(str(hit.get("content") or ""), limit=1),
+                                }
+                                for hit in flow_hits[:3]
+                            ],
+                            "professional_reference": [
+                                {
+                                    "title": hit.get("title"),
+                                    "category": hit.get("category"),
+                                    "content": split_sentences(str(hit.get("content") or ""), limit=2),
+                                }
+                                for hit in professional_hits[:4]
+                            ],
+                        },
+                        ensure_ascii=False,
+                    ),
+                },
+            ]
+            repair_call = self.llm.chat(
+                stage="reply_repair",
+                messages=repair_messages,
+                temperature=0.0,
+                max_tokens=260,
+                model=self.llm.settings.fast_chat_model,
+            )
+            repair_parsed = _safe_json_parse(repair_call["response_text"]) or {}
+            repaired_reply = clean_text(repair_parsed.get("final_reply"))
+            repair_attempts.append(
+                {
+                    **repair_call,
+                    "parsed": {
+                        "final_reply": repaired_reply,
+                                "verdict": clean_text(repair_parsed.get("verdict")),
+                                "notes": clean_text(repair_parsed.get("notes")),
+                            },
+                }
+            )
+            if repaired_reply:
+                final_reply = repaired_reply
+                verdict = clean_text(repair_parsed.get("verdict")) or "repaired"
+                notes = clean_text(repair_parsed.get("notes"))
+            violations = _reply_violations(
+                final_reply,
+                required_terms=required_terms,
+                forbidden_terms=forbidden_terms,
+                previous_assistant=previous_assistant,
+            )
+            if repeat_count >= 2 and "duplicate_previous_reply" in violations:
+                violations.append("needs_strategy_shift")
+
+        if violations and repeat_count >= 2:
+            hard_repair_messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "你现在只做最后一次强制修正。"
+                        "用户已经重复表达同一态度，你不能再重复 previous_assistant_reply，也不要沿用相同的信息顺序。"
+                        "如果家长持续不信任、敌意或抗拒，本轮可以选择尊重结束、先不打扰或给出退出选项，而不是继续追问流程。"
+                        "final_reply 必须能直接发送，语气要像真人，控制在 2 句以内。"
+                        "专业事实仍然只能使用提供的 professional_reference。"
+                        "只输出 JSON，字段必须包含 final_reply, verdict, notes。"
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {
+                            "latest_user_message": user_text,
+                            "current_reply": final_reply,
+                            "violations": violations,
+                            "previous_assistant_reply": previous_assistant,
+                            "repeat_user_message_count": repeat_count,
+                            "strategy_hints": strategy_hints,
+                            "intent": intent,
+                            "plan": plan,
+                            "draft_reply": draft_reply,
+                            "flow_reference": [
+                                {
+                                    "tag": hit.get("tag"),
+                                    "content": split_sentences(str(hit.get("content") or ""), limit=1),
+                                }
+                                for hit in flow_hits[:3]
+                            ],
+                            "professional_reference": [
+                                {
+                                    "title": hit.get("title"),
+                                    "category": hit.get("category"),
+                                    "content": split_sentences(str(hit.get("content") or ""), limit=2),
+                                }
+                                for hit in professional_hits[:4]
+                            ],
+                        },
+                        ensure_ascii=False,
+                    ),
+                },
+            ]
+            hard_repair_call = self.llm.chat(
+                stage="reply_repair_hard",
+                messages=hard_repair_messages,
+                temperature=0.0,
+                max_tokens=220,
+                model=self.llm.settings.fast_chat_model,
+            )
+            hard_repair_parsed = _safe_json_parse(hard_repair_call["response_text"]) or {}
+            hard_reply = clean_text(hard_repair_parsed.get("final_reply"))
+            repair_attempts.append(
+                {
+                    **hard_repair_call,
+                    "parsed": {
+                        "final_reply": hard_reply,
+                        "verdict": clean_text(hard_repair_parsed.get("verdict")),
+                        "notes": clean_text(hard_repair_parsed.get("notes")),
+                    },
+                }
+            )
+            if hard_reply:
+                final_reply = hard_reply
+                verdict = clean_text(hard_repair_parsed.get("verdict")) or "repaired"
+                notes = clean_text(hard_repair_parsed.get("notes"))
+            violations = _reply_violations(
+                final_reply,
+                required_terms=required_terms,
+                forbidden_terms=forbidden_terms,
+                previous_assistant=previous_assistant,
+            )
+        fallback_candidates = _fallback_reply_candidates(
+            user_text=user_text,
+            state=state,
+            intent=intent,
+            repeat_count=repeat_count,
+        )
+        if violations and fallback_candidates:
+            guardrail_messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "你现在只做最终 guardrail 修正。"
+                        "你必须输出一个此刻能直接发给用户的 final_reply。"
+                        "优先从 fallback_candidates 里选择一句或做轻微改写。"
+                        "final_reply 必须尽量覆盖 required_terms，绝不能出现 forbidden_terms，也不能与 previous_assistant_reply 基本重复。"
+                        "如果当前是质疑、敌意或隐私顾虑场景，就优先安抚和收束，不要继续销售推进。"
+                        "只输出 JSON，字段必须包含 final_reply, verdict, notes。"
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {
+                            "latest_user_message": user_text,
+                            "violations": violations,
+                            "required_terms": required_terms,
+                            "forbidden_terms": forbidden_terms,
+                            "previous_assistant_reply": previous_assistant,
+                            "fallback_candidates": fallback_candidates,
+                            "strategy_hints": strategy_hints,
+                            "intent": intent,
+                        },
+                        ensure_ascii=False,
+                    ),
+                },
+            ]
+            guardrail_call = self.llm.chat(
+                stage="reply_guardrail",
+                messages=guardrail_messages,
+                temperature=0.0,
+                max_tokens=220,
+                model=self.llm.settings.fast_chat_model,
+            )
+            guardrail_parsed = _safe_json_parse(guardrail_call["response_text"]) or {}
+            guardrail_reply = clean_text(guardrail_parsed.get("final_reply"))
+            repair_attempts.append(
+                {
+                    **guardrail_call,
+                    "parsed": {
+                        "final_reply": guardrail_reply,
+                        "verdict": clean_text(guardrail_parsed.get("verdict")),
+                        "notes": clean_text(guardrail_parsed.get("notes")),
+                    },
+                }
+            )
+            if guardrail_reply:
+                final_reply = guardrail_reply
+                verdict = clean_text(guardrail_parsed.get("verdict")) or "repaired"
+                notes = clean_text(guardrail_parsed.get("notes"))
+            violations = _reply_violations(
+                final_reply,
+                required_terms=required_terms,
+                forbidden_terms=forbidden_terms,
+                previous_assistant=previous_assistant,
+            )
+        if repair_attempts:
+            llm_call = {
+                **llm_call,
+                "repair_attempts": repair_attempts,
+                "final_violations": violations,
+            }
         final_reply = self._assemble_reply(prefix=final_reply, professional="", suffix="")
         return {
             "reply": final_reply,
-            "verdict": clean_text(parsed.get("verdict")),
-            "notes": clean_text(parsed.get("notes")),
+            "verdict": verdict,
+            "notes": notes,
             "llm_call": {
                 **llm_call,
                 "parsed": {
                     "final_reply": final_reply,
-                    "verdict": clean_text(parsed.get("verdict")),
-                    "notes": clean_text(parsed.get("notes")),
+                    "verdict": verdict,
+                    "notes": notes,
                 },
             },
         }
@@ -741,14 +1288,14 @@ class ConversationEngine:
     ) -> tuple[str, str]:
         fast_case = base_intent.get("fast_case")
         if fast_case == "stop_call":
-            return "抱歉打扰您了，我这边马上给您标记停联，不会再继续打扰。", ""
+            return "抱歉打扰您了，我这边马上给您标记停止联系，后续不再联系，也不再继续打扰您。", ""
         if fast_case == "privacy":
             privacy_count = sum(1 for item in state.history if item["role"] == "user" and _contains_any(item["content"], PRIVACY_MARKERS))
             if professional_hits and privacy_count <= 1:
                 return "", ""
             if privacy_count > 1:
-                return "我理解您是在确认这个点，您如果不希望继续联系，我现在就能给您停联；如果愿意继续，我只说明来电目的，绝不会继续打扰。", ""
-            return "理解您的顾虑，这类问题家长都会比较敏感。", ""
+                return "我理解您是在确认这个点，如果您不希望继续联系，我现在就可以给您停止联系；如果愿意继续，我只说明来电目的。", ""
+            return "理解您的顾虑，这类问题家长都会比较敏感，如果您不希望继续联系，我这边也可以直接停止联系。", ""
         if fast_case == "complaint":
             prefix = "" if professional_hits else "抱歉给您带来不好的体验，这类问题我先按售后登记处理。"
             suffix = "您把方便接收回复的手机号或微信留一下，我这边给您登记售后处理。" if not state.wechat_contact else "我这边已经记下联系方式了，会尽快给您登记处理。"
@@ -758,23 +1305,46 @@ class ConversationEngine:
         if fast_case == "identity":
             count = sum(1 for item in state.history if item["role"] == "user" and _contains_any(item["content"], IDENTITY_MARKERS))
             if count <= 1:
-                return "您好，我这边是北文教育课程咨询这边，主要是想了解下孩子最近的学习情况，看看有没有适合的提升方向。", ""
-            return "您好，我这边是北文教育课程咨询这边，这通电话主要是先判断孩子最近有没有哪科更需要重点提升，合适的话我再给您安排试听和资料参考。", "要是您方便，我先了解下孩子最近哪科更需要提升？"
+                return "您好，我这边是北文教育课程咨询，主要是先帮家长判断孩子当前学习情况，再看怎么安排更合适。", ""
+            return "您好，我这边是北文教育课程咨询，这通电话主要是先帮您把孩子目前的学习问题梳理清楚，合适的话再安排试听和资料参考。", "您是想先了解课程，还是先说说孩子最近的学习情况？"
         if fast_case == "robot":
-            return "不是机器人，我这边是真人顾问在跟您沟通，主要负责孩子课程咨询和试听安排。", ""
+            return "不是机器人，我这边是真人顾问在跟您沟通，也会像智能咨询助手一样先帮您梳理问题，再安排试听。", ""
+        if fast_case == "distrust":
+            return "理解您会有这个顾虑，现在电话里先警惕一点很正常。", "如果您不想继续听，我现在就可以结束；如果愿意，我只用半分钟说明来电目的。"
+        if fast_case == "hostile":
+            return "抱歉打扰到您了，我先把话说短一点。", "如果您不想继续听，我现在就结束；如果愿意，我只说明来电目的。"
+        if fast_case == "callback_later":
+            return "理解，您先忙，我这边先不打扰。", "您看今晚八点以后，还是明天更方便我再联系？"
+        if fast_case == "proof_request":
+            return "可以，我先把机构身份和来电目的说清楚。", "您是想先确认机构情况，还是先说说孩子最近的学习情况？"
+        if fast_case == "contradiction":
+            current_grade = state.grade or "刚才说的年级"
+            current_subject = state.subject or "刚才说的学科"
+            return f"我先跟您确认一下，刚才我记的是{current_grade}{current_subject}。", "现在以您刚刚说的这个为准，对吗？"
         if fast_case == "trial_request":
             return "可以的，我这边先作为课程顾问给您记下，后面会按孩子的年级和学科去匹配更合适的老师。", self._default_suffix(state, base_intent)
         if fast_case == "role_explain":
-            return "我这边主要是帮家长判断孩子当前学习问题、匹配合适老师，再安排试听和后续资料。", "要是您方便，我先了解下孩子最近哪科更需要提升？"
+            return "我这边是北文教育课程咨询，主要是帮家长先判断孩子当前问题，再匹配老师、安排试听和后续资料。", "您是想先了解课程，还是先说说孩子最近的学习情况？"
+        if fast_case == "unclear":
+            return self._unclear_prompt(state), ""
         if fast_case == "small_talk":
             return "在的，我这边是课程顾问。", "您是想先了解孩子哪一科，还是先问试听安排？"
         if fast_case == "off_topic":
-            return "这个话题我知道，不过我还是先围绕孩子学习这件事帮您把重点捋清楚。", self._default_suffix(state, base_intent)
+            return "这个话题我先不展开，咱们还是尽量聚焦孩子学习这件事。", self._default_suffix(state, base_intent)
         if fast_case == "slot_only":
             return self._slot_ack(state), self._default_suffix(state, base_intent)
         if not plan["missing_goals"]:
             return "好的，那我这边就按刚才确认的信息给您安排，稍后微信上和您对接。", "您这边还有别的问题吗？"
         return self._fallback_prefix(base_intent, user_text=user_text, state=state), self._default_suffix(state, base_intent)
+
+    def _unclear_prompt(self, state: ConversationState) -> str:
+        if state.grade and not state.subject:
+            return "我怕自己听岔了，您说的是哪门学科？比如语文、数学或者英语。"
+        if state.grade and state.subject and not state.trial_invited:
+            return "我怕自己听岔了，您是想先了解试听，还是先了解老师和安排？"
+        if not state.grade:
+            return "我这边可能没听清，您刚刚是想说孩子学习上的事，还是想先了解课程安排？"
+        return "我怕自己听岔了，您再跟我说一下您现在最想了解的点。"
 
     def _slot_ack(self, state: ConversationState) -> str:
         if state.schedule_preference:
@@ -866,6 +1436,18 @@ class ConversationEngine:
             return ""
         if base_intent.get("fast_case") == "privacy":
             return ""
+        if base_intent.get("fast_case") == "callback_later":
+            return "您看今晚八点以后，还是明天更方便我再联系？"
+        if base_intent.get("fast_case") == "contradiction":
+            return "现在以您刚刚说的这个为准，对吗？"
+        if base_intent.get("fast_case") == "proof_request":
+            return "您是想先确认机构情况，还是先说说孩子最近的学习情况？"
+        if base_intent.get("fast_case") in {"distrust", "hostile"}:
+            return "您是想先确认我们是什么机构，还是先听我说下这通电话的来意？"
+        if base_intent.get("fast_case") in {"identity", "robot", "role_explain"}:
+            return "您是想先了解课程，还是先说说孩子最近的学习情况？"
+        if base_intent.get("fast_case") == "off_topic":
+            return "要不我们还是先说回孩子最近的学习情况，您现在最担心哪一块？"
         if not state.grade:
             return "您家孩子现在几年级了？"
         if not state.subject:
@@ -918,7 +1500,7 @@ class ConversationEngine:
             return cleaned
         objection = base_intent.get("objection_label")
         if objection == "价格顾虑":
-            return "先把费用问清楚很正常。"
+            return "先把报价和费用问清楚很正常。"
         if objection == "效果怀疑":
             return "您先确认清楚再决定，这很正常。"
         if objection == "孩子抗拒":
@@ -937,6 +1519,8 @@ class ConversationEngine:
             return "可以的，我这边先作为课程顾问给您记下，后面会按孩子的年级和学科去匹配更合适的老师。"
         if base_intent.get("objection_label") == "没时间":
             return "理解，您现在忙，我就抓关键、说重点。"
+        if _contains_any(user_text, PRICE_MARKERS):
+            return "您先问报价和费用很正常，我先给您说清楚。"
         if base_intent.get("objection_label") == "孩子抗拒":
             return "这种情况很常见，我能理解，先找到孩子抵触的原因，再换孩子更容易接受的方式。"
         if _contains_any(user_text, LOCATION_MARKERS) and state:

@@ -20,10 +20,10 @@ if str(PROJECT_ROOT) not in sys.path:
 from app.engine import ConversationEngine
 
 
-TRAIN_SCENARIOS = PROJECT_ROOT.parent / "Telemarketing" / "Train" / "benchmark_scenarios_500.jsonl"
+TRAIN_SCENARIOS = PROJECT_ROOT.parent / "Train" / "benchmark_scenarios_500.jsonl"
 REPORT_DIR = PROJECT_ROOT / "qa" / "reports"
 
-LEAD_CATEGORIES = {"price", "trial", "busy", "expensive", "already_have", "child_unwilling", "small_talk", "effect", "repeat_question"}
+LEAD_CATEGORIES = {"price", "trial", "busy", "expensive", "already_have", "child_unwilling", "small_talk", "effect", "repeat_question", "callback_later", "parent_not_decision", "contradiction"}
 PROFESSIONAL_CATEGORIES = {"price", "expensive", "already_have", "child_unwilling", "effect", "repeat_question", "trial"}
 
 GRADE_SUBJECT_CHOICES = [
@@ -255,6 +255,25 @@ def evaluate_scenario(scenario: dict[str, Any], conversation: list[dict[str, Any
 
     if category == "busy":
         checks.append(_check("busy_short_and_clear", all(len(reply) <= 160 for reply in normalized_replies[1:3]), "家长忙时回复过长"))
+
+    if category in {"distrust", "hostile", "proof_request"}:
+        first_reply = normalized_replies[1] if len(normalized_replies) > 1 else ""
+        checks.append(_check("trust_first", any(token in first_reply for token in ("理解", "顾虑", "课程咨询", "北文教育", "来电目的")), "未先处理信任问题"))
+        checks.append(_check("trust_no_hard_sell", all(token not in first_reply for token in ("微信", "试听", "几年级", "哪科")), "信任场景首轮过度销售"))
+
+    if category == "nonsense_noise":
+        checks.append(_check("nonsense_clarify", any(any(token in reply for token in ("听岔", "说的是不是", "确认一下")) for reply in replies), "噪声场景未先澄清"))
+        checks.append(_check("nonsense_no_hard_sell", all(not any(token in reply for token in ("微信", "试听")) for reply in normalized_replies[1:2]), "噪声场景首轮过度推进"))
+
+    if category == "contradiction":
+        checks.append(_check("contradiction_clarify", any(any(token in reply for token in ("确认", "刚才", "以现在这个为准")) for reply in replies), "矛盾信息未先确认"))
+
+    if category == "callback_later":
+        checks.append(_check("callback_respect", any(any(token in reply for token in ("理解", "不打扰", "今晚", "八点")) for reply in replies), "未尊重回拨时间"))
+
+    if category == "parent_not_decision":
+        checks.append(_check("decision_empathy", any(any(token in reply for token in ("商量", "理解")) for reply in replies), "未回应需商量场景"))
+        checks.append(_check("decision_value", any(any(token in reply for token in ("帮", "问题")) for reply in replies), "未说明能帮什么"))
 
     return checks
 

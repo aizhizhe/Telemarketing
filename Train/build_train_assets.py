@@ -226,6 +226,58 @@ WEB_DIALOGUE_BLUEPRINTS = [
         "reply_type": "refuse",
         "final_action": "redirect_to_compliant_scope",
     },
+    {
+        "category": "distrust",
+        "description": "家长质疑是骗子、套话或营销，要求先说清来电目的。",
+        "user_turns": ["你们不会是骗子吧？", "先别忽悠我，你到底想干嘛？", "你先把来电目的说清楚"],
+        "must_include": [["理解", "顾虑"], ["来电目的"]],
+        "must_not_include": [["几年级", "哪科"]],
+        "final_action": "build_trust_then_discover",
+    },
+    {
+        "category": "hostile",
+        "description": "家长情绪不好，有一定敌意，但未明确要求停呼。",
+        "user_turns": ["你有完没完？别烦我", "你先把话说短点"],
+        "must_include": [["抱歉", "打扰"], ["来电目的"]],
+        "must_not_include": [["试听", "微信"]],
+        "final_action": "deescalate_then_offer_exit",
+    },
+    {
+        "category": "nonsense_noise",
+        "description": "家长输入乱字、错字、含混短句，需要先澄清。",
+        "user_turns": ["书序", "啥玩意", "你你你先说"],
+        "must_include": [["听岔", "说的是不是"], ["语文", "数学", "英语"]],
+        "final_action": "clarify_then_continue",
+    },
+    {
+        "category": "contradiction",
+        "description": "家长前后给出矛盾信息，需要先确认以哪个为准。",
+        "user_turns": ["孩子{grade}{subject}", "不对，其实是初一数学", "{contact}"],
+        "must_include": [["确认", "刚才"], ["以现在这个为准"]],
+        "final_outcome": "lead",
+    },
+    {
+        "category": "callback_later",
+        "description": "家长暂时不方便，需要协商回拨时间。",
+        "user_turns": ["我现在开会，晚点打", "今晚八点以后可以", "{grade}{subject}", "{contact}"],
+        "must_include": [["理解", "不打扰"], ["今晚", "八点"]],
+        "final_outcome": "lead",
+    },
+    {
+        "category": "parent_not_decision",
+        "description": "家长表示要和另一位监护人商量，但允许先了解。",
+        "user_turns": ["这个得跟孩子爸爸商量", "你先说可以帮什么", "{grade}{subject}", "{contact}"],
+        "must_include": [["商量", "理解"], ["帮", "问题"]],
+        "final_outcome": "lead",
+    },
+    {
+        "category": "proof_request",
+        "description": "家长要求先说清机构身份、资质或可信信息。",
+        "user_turns": ["你们有资质吗", "先说清你们是哪家机构"],
+        "must_include": [["北文教育", "课程咨询"], ["了解", "学习情况"]],
+        "must_not_include": [["几年级", "哪科"]],
+        "final_action": "build_trust_then_discover",
+    },
 ]
 
 
@@ -296,19 +348,21 @@ def write_jsonl(path: Path, records: Iterable[dict]) -> None:
 
 def build_web_seeds(collected_sources: list[dict]) -> list[dict]:
     source_map = {item["id"]: item for item in collected_sources}
+    declared_source_map = {item["id"]: item for item in WEB_SOURCES}
     seeds: list[dict] = []
 
     def evidence(source_id: str, count: int = 3) -> list[str]:
-        return source_map[source_id]["snippets"][:count]
+        return (source_map.get(source_id) or {}).get("snippets", [])[:count]
 
     def add(seed_id: str, source_id: str, category: str, description: str, user_turns: list[str]) -> None:
+        source_meta = source_map.get(source_id) or declared_source_map.get(source_id) or {"title": source_id, "url": ""}
         seeds.append(
             {
                 "scenario_id": seed_id,
                 "source_type": "web_public",
                 "source_id": source_id,
-                "source_title": source_map[source_id]["resolved_title"],
-                "source_url": source_map[source_id]["url"],
+                "source_title": source_meta.get("resolved_title") or source_meta.get("title", source_id),
+                "source_url": source_meta.get("url", ""),
                 "category": category,
                 "description": description,
                 "user_turns": user_turns,
@@ -455,6 +509,13 @@ def build_generated_seeds() -> list[dict]:
         "complaint": 35,
         "repeat_question": 25,
         "risky": 25,
+        "distrust": 30,
+        "hostile": 20,
+        "nonsense_noise": 20,
+        "contradiction": 20,
+        "callback_later": 20,
+        "parent_not_decision": 20,
+        "proof_request": 20,
     }
     scenarios: list[dict] = []
     for blueprint in WEB_DIALOGUE_BLUEPRINTS:
@@ -466,7 +527,20 @@ def sample_to_500(web_seeds: list[dict], generated: list[dict]) -> list[dict]:
     benchmark: list[dict] = []
     benchmark.extend(web_seeds)
     needed = 500 - len(benchmark)
-    benchmark.extend(generated[:needed])
+    by_category: dict[str, list[dict]] = {}
+    for item in generated:
+        by_category.setdefault(item["category"], []).append(item)
+    ordered_categories = sorted(by_category)
+    selected: list[dict] = []
+    while len(selected) < needed and any(by_category.values()):
+        for category in ordered_categories:
+            bucket = by_category.get(category) or []
+            if not bucket:
+                continue
+            selected.append(bucket.pop(0))
+            if len(selected) >= needed:
+                break
+    benchmark.extend(selected)
     for index, item in enumerate(benchmark):
         item["benchmark_index"] = index
     return benchmark[:500]

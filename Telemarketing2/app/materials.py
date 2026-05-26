@@ -59,6 +59,27 @@ GRADE_CANDIDATES = {
     "高三": ("高三",),
 }
 
+GRADE_NUMBER_WORDS = {
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8",
+    "9": "9",
+    "一": "1",
+    "二": "2",
+    "三": "3",
+    "四": "4",
+    "五": "5",
+    "六": "6",
+    "七": "7",
+    "八": "8",
+    "九": "9",
+}
+
 WECHAT_REGEX = re.compile(r"(?<![A-Za-z0-9_])(1[3-9]\d{9}|[A-Za-z][A-Za-z0-9_-]{5,19})(?![A-Za-z0-9_])")
 
 
@@ -109,6 +130,20 @@ def extract_grade(text: str) -> str | None:
     cleaned = clean_text(text)
     if not cleaned:
         return None
+    primary_school = re.search(r"小学\s*([1-6])\s*年级", cleaned)
+    if primary_school:
+        return f"小学{primary_school.group(1)}年级"
+    plain_grade = re.search(r"(?<![0-9])([1-6])\s*年级", cleaned)
+    if plain_grade:
+        return f"小学{plain_grade.group(1)}年级"
+    junior_grade = re.search(r"(?:初中|初)\s*([1-3一二三])", cleaned)
+    if junior_grade:
+        value = GRADE_NUMBER_WORDS.get(junior_grade.group(1), junior_grade.group(1))
+        return {"1": "七年级", "2": "八年级", "3": "九年级"}.get(value)
+    senior_grade = re.search(r"(?:高中|高)\s*([1-3一二三])(?!对)", cleaned)
+    if senior_grade:
+        value = GRADE_NUMBER_WORDS.get(senior_grade.group(1), senior_grade.group(1))
+        return {"1": "高一", "2": "高二", "3": "高三"}.get(value)
     for pattern, template in GRADE_PATTERNS:
         match = pattern.search(cleaned)
         if not match:
